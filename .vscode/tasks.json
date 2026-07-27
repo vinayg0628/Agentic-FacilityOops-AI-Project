@@ -1,0 +1,39 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Run FastAPI Backend",
+      "type": "shell",
+      "command": "python -m uvicorn app.main:app --reload --port 8000",
+      "options": {
+        "cwd": "${workspaceFolder}/backend"
+      },
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "Run React Frontend",
+      "type": "shell",
+      "command": "npm run dev",
+      "options": {
+        "cwd": "${workspaceFolder}/frontend"
+      },
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "Run Entire FacilityOps AI Platform",
+      "dependsOn": [
+        "Run FastAPI Backend",
+        "Run React Frontend"
+      ],
+      "problemMatcher": []
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+facility_id,facility_name,facility_type,city,state,total_floors,total_area_sqft
+FAC-001,CyberTech IT Park,IT Park,San Jose,CA,12,450000.0
+FAC-002,St. Jude General Hospital,Hospital,Chicago,IL,8,320000.0
+FAC-003,Pacific Innovation University,University,Seattle,WA,15,600000.0
+FAC-004,Grand Horizon Shopping Mall,Shopping Mall,Dallas,TX,4,520000.0
+FAC-005,Apex Precision Factory,Factory,Detroit,MI,2,280000.0
