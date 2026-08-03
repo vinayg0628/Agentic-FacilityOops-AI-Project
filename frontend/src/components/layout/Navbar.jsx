@@ -1,35 +1,157 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useFacility } from '../../context/FacilityContext';
-import { 
-  Building2, 
-  Search, 
-  Sun, 
-  Moon, 
-  Bell, 
-  PlusCircle, 
-  Layers
+import {
+  Building2,
+  Search,
+  Sun,
+  Moon,
+  Bell,
+  PlusCircle,
+  Layers,
+  Wrench,
+  Zap,
+  BarChart3,
+  AlertTriangle,
+  Lightbulb,
+  FileText,
+  Settings,
+  Activity,
+  Gauge,
+  Calendar,
+  BellDot,
+  BarChart2,
+  LayoutDashboard,
+  X,
+  ArrowRight
 } from 'lucide-react';
+import { fetchEquipmentList } from '../../services/maintenanceApi';
+
+// ──────────────────────────────────────────────
+// Static page shortcuts (always available)
+// ──────────────────────────────────────────────
+const PAGE_SHORTCUTS = [
+  { label: 'Dashboard',          path: '/',                        icon: LayoutDashboard,  category: 'Pages' },
+  { label: 'Energy Monitoring',  path: '/energy',                  icon: Zap,              category: 'Pages' },
+  { label: 'Analytics',          path: '/analytics',               icon: BarChart3,        category: 'Pages' },
+  { label: 'Alerts',             path: '/alerts',                  icon: AlertTriangle,    category: 'Pages' },
+  { label: 'Recommendations',    path: '/recommendations',         icon: Lightbulb,        category: 'Pages' },
+  { label: 'Reports',            path: '/reports',                 icon: FileText,         category: 'Pages' },
+  { label: 'Settings',           path: '/settings',                icon: Settings,         category: 'Pages' },
+  { label: 'PM Dashboard',       path: '/maintenance',             icon: Wrench,           category: 'Maintenance' },
+  { label: 'Equipment',          path: '/maintenance/equipment',   icon: Activity,         category: 'Maintenance' },
+  { label: 'Health Scores',      path: '/maintenance/health',      icon: Gauge,            category: 'Maintenance' },
+  { label: 'Predictions',        path: '/maintenance/predictions', icon: BarChart2,        category: 'Maintenance' },
+  { label: 'Schedule',           path: '/maintenance/schedule',    icon: Calendar,         category: 'Maintenance' },
+  { label: 'PM Alerts',          path: '/maintenance/alerts',      icon: BellDot,          category: 'Maintenance' },
+];
 
 export const Navbar = ({ activeAlertsCount = 0 }) => {
-  const { 
-    facilities, 
-    selectedFacilityId, 
-    setSelectedFacilityId, 
-    searchQuery, 
-    setSearchQuery, 
-    dateFilter, 
-    setDateFilter, 
-    theme, 
+  const navigate = useNavigate();
+  const {
+    facilities,
+    selectedFacilityId,
+    setSelectedFacilityId,
+    searchQuery,
+    setSearchQuery,
+    dateFilter,
+    setDateFilter,
+    theme,
     toggleTheme,
     setIsIngestModalOpen
   } = useFacility();
 
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showSearch, setShowSearch]               = useState(false);
+  const [localSearch, setLocalSearch]             = useState('');
+  const [equipment, setEquipment]                 = useState([]);
+  const [results, setResults]                     = useState([]);
+
+  const searchRef = useRef(null);
+  const inputRef  = useRef(null);
+
+  // Load equipment list once for search
+  useEffect(() => {
+    fetchEquipmentList().then(data => setEquipment(data)).catch(() => {});
+  }, []);
+
+  // Focus input when dropdown opens
+  useEffect(() => {
+    if (showSearch && inputRef.current) inputRef.current.focus();
+  }, [showSearch]);
+
+  // Close on outside click
+  useEffect(() => {
+    const handler = (e) => {
+      if (searchRef.current && !searchRef.current.contains(e.target)) {
+        setShowSearch(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  // Close on Escape
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.key === 'Escape') { setShowSearch(false); setLocalSearch(''); }
+    };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, []);
+
+  // Real-time search computation
+  useEffect(() => {
+    const q = localSearch.trim().toLowerCase();
+    setSearchQuery(localSearch); // keep context in sync
+
+    if (!q) { setResults([]); return; }
+
+    // Match pages
+    const pageMatches = PAGE_SHORTCUTS
+      .filter(p => p.label.toLowerCase().includes(q) || p.category.toLowerCase().includes(q))
+      .map(p => ({ ...p, type: 'page' }));
+
+    // Match equipment (supports both mock keys and real API keys)
+    const eqMatches = equipment
+      .filter(eq => {
+        const name  = (eq.equipment_name || eq.name  || '').toLowerCase();
+        const type  = (eq.equipment_type || eq.type  || '').toLowerCase();
+        const loc   = (eq.location       || '').toLowerCase();
+        const fac   = (eq.facility_id    || '').toLowerCase();
+        return name.includes(q) || type.includes(q) || loc.includes(q) || fac.includes(q);
+      })
+      .slice(0, 6)
+      .map(eq => ({
+        type:     'equipment',
+        label:    eq.equipment_name || eq.name,
+        subLabel: eq.equipment_type || eq.type,
+        health:   eq.health_score,
+        category: eq.health_category,
+        path:     '/maintenance/equipment',
+        icon:     Wrench,
+      }));
+
+    setResults([...pageMatches.slice(0, 4), ...eqMatches]);
+  }, [localSearch, equipment]);
+
+  const handleResultClick = (path) => {
+    navigate(path);
+    setShowSearch(false);
+    setLocalSearch('');
+  };
+
+  const getHealthColor = (score) => {
+    if (!score) return 'text-slate-400';
+    if (score >= 75) return 'text-emerald-400';
+    if (score >= 60) return 'text-amber-400';
+    return 'text-rose-400';
+  };
 
   return (
     <header className="sticky top-0 z-40 w-full glass-header px-6 py-3 transition-colors duration-300">
       <div className="flex items-center justify-between gap-4">
-        
+
         {/* Brand / Logo & Live System Status */}
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2.5">
@@ -37,10 +159,10 @@ export const Navbar = ({ activeAlertsCount = 0 }) => {
               <Layers className="w-6 h-6 animate-pulse" />
             </div>
             <div>
-              <h1 className="text-lg font-bold bg-gradient-to-r from-slate-100 via-cyan-200 to-blue-400 light:from-slate-900 light:via-cyan-600 light:to-blue-700 bg-clip-text text-transparent leading-none">
-                FacilityOps <span className="text-cyan-400 light:text-cyan-700 text-xs font-semibold px-2 py-0.5 rounded-full bg-cyan-950/80 light:bg-cyan-100 border border-cyan-800 light:border-cyan-300 ml-1">AI Energy</span>
+              <h1 className="text-lg font-bold bg-gradient-to-r from-slate-100 via-cyan-200 to-blue-400 bg-clip-text text-transparent leading-none">
+                FacilityOps <span className="text-cyan-400 text-xs font-semibold px-2 py-0.5 rounded-full bg-cyan-950/80 border border-cyan-800 ml-1">AI Energy</span>
               </h1>
-              <p className="text-xs text-slate-400 light:text-slate-600 mt-0.5 flex items-center gap-1.5 font-medium">
+              <p className="text-xs text-slate-400 mt-0.5 flex items-center gap-1.5 font-medium">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
                 <span>Telemetry Grid Engine Active</span>
               </p>
@@ -50,16 +172,16 @@ export const Navbar = ({ activeAlertsCount = 0 }) => {
 
         {/* Global Controls: Facility Switcher & Search */}
         <div className="flex items-center gap-3 flex-1 max-w-2xl justify-center">
-          
+
           {/* Facility Selector */}
           <div className="relative flex-1 max-w-xs">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 light:text-slate-500">
-              <Building2 className="w-4 h-4 text-cyan-400 light:text-cyan-600" />
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+              <Building2 className="w-4 h-4 text-cyan-400" />
             </div>
             <select
               value={selectedFacilityId}
               onChange={(e) => setSelectedFacilityId(e.target.value)}
-              className="w-full pl-9 pr-8 py-2 text-xs font-medium rounded-xl bg-slate-900/60 light:bg-slate-100 text-slate-200 light:text-slate-900 border border-slate-700/60 light:border-slate-300 focus:outline-none focus:border-cyan-500 transition-all cursor-pointer shadow-inner"
+              className="w-full pl-9 pr-8 py-2 text-xs font-medium rounded-xl bg-slate-900/60 text-slate-200 border border-slate-700/60 focus:outline-none focus:border-cyan-500 transition-all cursor-pointer shadow-inner"
             >
               <option value="ALL">🏢 All Facilities (Enterprise View)</option>
               {facilities.map((fac) => (
@@ -70,30 +192,137 @@ export const Navbar = ({ activeAlertsCount = 0 }) => {
             </select>
           </div>
 
-          {/* Search Bar */}
-          <div className="relative flex-1 max-w-xs">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 light:text-slate-500">
-              <Search className="w-4 h-4" />
+          {/* ─── Global Search Bar with Dropdown ─── */}
+          <div className="relative flex-1 max-w-xs" ref={searchRef}>
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Search className="w-4 h-4 text-slate-400" />
             </div>
             <input
+              ref={inputRef}
               type="text"
-              placeholder="Search telemetry, sensors, metrics..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 text-xs rounded-xl bg-slate-900/60 light:bg-slate-100 text-slate-200 light:text-slate-900 border border-slate-700/60 light:border-slate-300 focus:outline-none focus:border-cyan-500 transition-all"
+              placeholder="Search pages, equipment, sensors..."
+              value={localSearch}
+              onFocus={() => setShowSearch(true)}
+              onChange={(e) => { setLocalSearch(e.target.value); setShowSearch(true); }}
+              className="w-full pl-9 pr-8 py-2 text-xs rounded-xl bg-slate-900/60 text-slate-200 border border-slate-700/60 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/30 transition-all"
             />
+            {localSearch && (
+              <button
+                onClick={() => { setLocalSearch(''); setSearchQuery(''); inputRef.current?.focus(); }}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-500 hover:text-slate-300"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+
+            {/* ─── Search Dropdown ─── */}
+            {showSearch && (
+              <div className="absolute top-full mt-2 left-0 w-80 bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl shadow-black/50 z-50 overflow-hidden">
+                {localSearch.trim() === '' ? (
+                  /* Empty state: show quick-access shortcuts */
+                  <div className="p-3">
+                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-2 mb-2">Quick Access</p>
+                    <div className="space-y-0.5">
+                      {PAGE_SHORTCUTS.slice(0, 6).map(item => {
+                        const Icon = item.icon;
+                        return (
+                          <button
+                            key={item.path}
+                            onClick={() => handleResultClick(item.path)}
+                            className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs text-slate-300 hover:bg-slate-800 hover:text-cyan-400 transition-colors text-left group"
+                          >
+                            <Icon className="w-3.5 h-3.5 text-slate-500 group-hover:text-cyan-400 transition-colors" />
+                            <span>{item.label}</span>
+                            <span className="ml-auto text-[10px] text-slate-600 group-hover:text-slate-400">{item.category}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <p className="text-[10px] text-slate-600 text-center mt-3 pb-1">Type to search equipment, alerts, and pages</p>
+                  </div>
+                ) : results.length === 0 ? (
+                  /* No results */
+                  <div className="p-6 text-center">
+                    <Search className="w-8 h-8 text-slate-700 mx-auto mb-2" />
+                    <p className="text-sm text-slate-400">No results for <span className="text-slate-200 font-semibold">"{localSearch}"</span></p>
+                    <p className="text-xs text-slate-600 mt-1">Try searching for equipment type or page name</p>
+                  </div>
+                ) : (
+                  /* Results */
+                  <div className="p-2">
+                    {/* Page results */}
+                    {results.filter(r => r.type === 'page').length > 0 && (
+                      <div className="mb-1">
+                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-3 py-1">Pages</p>
+                        {results.filter(r => r.type === 'page').map(item => {
+                          const Icon = item.icon;
+                          return (
+                            <button
+                              key={item.path + item.label}
+                              onClick={() => handleResultClick(item.path)}
+                              className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs text-slate-300 hover:bg-slate-800 hover:text-cyan-400 transition-colors text-left group"
+                            >
+                              <Icon className="w-3.5 h-3.5 text-slate-500 group-hover:text-cyan-400 flex-shrink-0" />
+                              <span className="flex-1">{item.label}</span>
+                              <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 text-cyan-400 transition-opacity" />
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {/* Equipment results */}
+                    {results.filter(r => r.type === 'equipment').length > 0 && (
+                      <div>
+                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-3 py-1 mt-1">Equipment</p>
+                        {results.filter(r => r.type === 'equipment').map((item, idx) => {
+                          const Icon = item.icon;
+                          return (
+                            <button
+                              key={idx}
+                              onClick={() => handleResultClick(item.path)}
+                              className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs text-slate-300 hover:bg-slate-800 transition-colors text-left group"
+                            >
+                              <Icon className="w-3.5 h-3.5 text-violet-400 flex-shrink-0" />
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium text-slate-200 truncate">{item.label}</p>
+                                <p className="text-[10px] text-slate-500">{item.subLabel}</p>
+                              </div>
+                              {item.health != null && (
+                                <span className={`text-xs font-bold ${getHealthColor(item.health)} flex-shrink-0`}>
+                                  {Math.round(item.health)}%
+                                </span>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    <div className="border-t border-slate-800 mt-2 pt-2 px-3 pb-1">
+                      <button
+                        onClick={() => handleResultClick('/maintenance/equipment')}
+                        className="text-[10px] text-cyan-400 hover:text-cyan-300 font-medium"
+                      >
+                        View all equipment →
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Date Filter Pills */}
-          <div className="hidden lg:flex items-center bg-slate-900/70 light:bg-slate-200/90 p-1 rounded-xl border border-slate-800 light:border-slate-300 text-xs font-medium text-slate-400 light:text-slate-600">
+          <div className="hidden lg:flex items-center bg-slate-900/70 p-1 rounded-xl border border-slate-800 text-xs font-medium text-slate-400">
             {['Today', 'Week', 'Month', 'Year'].map((filter) => (
               <button
                 key={filter}
                 onClick={() => setDateFilter(filter)}
                 className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
-                  dateFilter === filter 
-                    ? 'bg-cyan-500 text-slate-950 font-bold shadow-sm' 
-                    : 'hover:text-slate-200 light:hover:text-slate-900'
+                  dateFilter === filter
+                    ? 'bg-cyan-500 text-slate-950 font-bold shadow-sm'
+                    : 'hover:text-slate-200'
                 }`}
               >
                 {filter}
@@ -104,7 +333,7 @@ export const Navbar = ({ activeAlertsCount = 0 }) => {
 
         {/* Right Actions */}
         <div className="flex items-center gap-3">
-          
+
           {/* Manual Telemetry Ingest Button */}
           <button
             onClick={() => setIsIngestModalOpen(true)}
@@ -117,7 +346,7 @@ export const Navbar = ({ activeAlertsCount = 0 }) => {
           {/* Theme Toggle */}
           <button
             onClick={toggleTheme}
-            className="p-2 rounded-xl bg-slate-800/60 light:bg-slate-200 border border-slate-700/60 light:border-slate-300 text-slate-300 light:text-slate-700 hover:text-cyan-400 transition-all cursor-pointer"
+            className="p-2 rounded-xl bg-slate-800/60 border border-slate-700/60 text-slate-300 hover:text-cyan-400 transition-all cursor-pointer"
             title="Toggle Light/Dark Theme"
           >
             {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-700" />}
@@ -127,7 +356,7 @@ export const Navbar = ({ activeAlertsCount = 0 }) => {
           <div className="relative">
             <button
               onClick={() => setShowNotifications(!showNotifications)}
-              className="p-2 rounded-xl bg-slate-800/60 light:bg-slate-200 border border-slate-700/60 light:border-slate-300 text-slate-300 light:text-slate-700 hover:text-cyan-400 transition-all cursor-pointer relative"
+              className="p-2 rounded-xl bg-slate-800/60 border border-slate-700/60 text-slate-300 hover:text-cyan-400 transition-all cursor-pointer relative"
             >
               <Bell className="w-4 h-4" />
               {activeAlertsCount > 0 && (
@@ -139,21 +368,21 @@ export const Navbar = ({ activeAlertsCount = 0 }) => {
 
             {/* Notifications Dropdown */}
             {showNotifications && (
-              <div className="absolute right-0 mt-2 w-80 rounded-2xl glass-panel p-4 z-50 border border-slate-700 light:border-slate-300 shadow-2xl text-xs bg-slate-900 light:bg-white">
-                <div className="flex items-center justify-between border-b border-slate-700 light:border-slate-200 pb-2 mb-3">
-                  <span className="font-semibold text-slate-200 light:text-slate-900">Active Energy Alerts</span>
-                  <span className="px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-400 light:text-rose-600 font-mono text-[10px] font-bold">
+              <div className="absolute right-0 mt-2 w-80 rounded-2xl glass-panel p-4 z-50 border border-slate-700 shadow-2xl text-xs bg-slate-900">
+                <div className="flex items-center justify-between border-b border-slate-700 pb-2 mb-3">
+                  <span className="font-semibold text-slate-200">Active Energy Alerts</span>
+                  <span className="px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-400 font-mono text-[10px] font-bold">
                     {activeAlertsCount} Unresolved
                   </span>
                 </div>
                 <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
                   {activeAlertsCount > 0 ? (
-                    <div className="p-2.5 rounded-xl bg-rose-950/40 light:bg-rose-50 border border-rose-800/50 light:border-rose-200 text-rose-200 light:text-rose-900">
+                    <div className="p-2.5 rounded-xl bg-rose-950/40 border border-rose-800/50 text-rose-200">
                       <p className="font-semibold text-xs">Critical HVAC Spike Detected</p>
-                      <p className="text-[11px] text-rose-300/80 light:text-rose-700 mt-1">CyberTech IT Park load exceeded 28% threshold.</p>
+                      <p className="text-[11px] text-rose-300/80 mt-1">CyberTech IT Park load exceeded 28% threshold.</p>
                     </div>
                   ) : (
-                    <p className="text-slate-400 light:text-slate-500 text-center py-4">No active critical alerts.</p>
+                    <p className="text-slate-400 text-center py-4">No active critical alerts.</p>
                   )}
                 </div>
               </div>

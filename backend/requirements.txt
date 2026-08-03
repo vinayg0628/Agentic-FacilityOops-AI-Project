@@ -1,11 +1,47 @@
+# ─────────────────────────────────────────────────────────
+#  Agentic FacilityOps AI Platform — Backend Dependencies
+# ─────────────────────────────────────────────────────────
+
+# ── Web Framework ─────────────────────────────────────────
 fastapi>=0.110.0
-uvicorn>=0.28.0
+uvicorn[standard]>=0.28.0
+python-multipart>=0.0.9       # form data / file uploads
+
+# ── Database ──────────────────────────────────────────────
 sqlalchemy>=2.0.28
+alembic>=1.13.1               # database migrations
+psycopg2-binary>=2.9.9        # PostgreSQL driver
+aiosqlite>=0.20.0             # async SQLite (dev)
+
+# ── Validation & Settings ─────────────────────────────────
 pydantic>=2.6.4
 pydantic-settings>=2.2.1
+pydantic[email]>=2.6.4             # EmailStr support for auth schemas
+python-dotenv>=1.0.1
+
+# ── Authentication & Security ─────────────────────────────
+python-jose[cryptography]>=3.3.0   # JWT tokens
+passlib[bcrypt]>=1.7.4             # password hashing
+bcrypt==4.0.1                      # pinned: 4.1+ breaks passlib 1.7.4
+
+# ── Caching & Real-time ───────────────────────────────────
+redis>=5.0.3
+hiredis>=2.3.2                     # fast Redis parser
+
+# ── Data Science & AI ─────────────────────────────────────
 pandas>=2.2.1
 numpy>=1.26.4
-python-multipart>=0.0.9
+scikit-learn>=1.4.1
+
+# ── File Processing ───────────────────────────────────────
 openpyxl>=3.1.2
 reportlab>=4.1.0
+
+# ── HTTP Client ───────────────────────────────────────────
 requests>=2.31.0
+httpx>=0.27.0                 # async HTTP
+
+# ── Testing ───────────────────────────────────────────────
+pytest>=8.1.1
+pytest-asyncio>=0.23.6
+httpx>=0.27.0                 # for TestClient

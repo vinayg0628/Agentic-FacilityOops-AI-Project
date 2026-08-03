@@ -16,3 +16,4 @@ class Facility(Base):
     # Relationships
     energy_records = relationship("EnergyUsage", back_populates="facility", cascade="all, delete-orphan")
     alerts = relationship("EnergyAlert", back_populates="facility", cascade="all, delete-orphan")
+    equipment_list = relationship("Equipment", back_populates="facility", cascade="all, delete-orphan")

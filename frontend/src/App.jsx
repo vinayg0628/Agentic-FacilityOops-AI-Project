@@ -12,6 +12,12 @@ import { AlertsPage } from './pages/AlertsPage';
 import { RecommendationsPage } from './pages/RecommendationsPage';
 import { ReportsPage } from './pages/ReportsPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { MaintenanceDashboard } from './pages/maintenance/MaintenanceDashboard';
+import { EquipmentPage } from './pages/maintenance/EquipmentPage';
+import { HealthScoresPage } from './pages/maintenance/HealthScoresPage';
+import { PredictionsPage } from './pages/maintenance/PredictionsPage';
+import { SchedulePage } from './pages/maintenance/SchedulePage';
+import { AlertsManagementPage } from './pages/maintenance/AlertsManagementPage';
 
 export function App() {
   return (
@@ -35,6 +41,12 @@ export function App() {
                 <Route path="/recommendations" element={<RecommendationsPage />} />
                 <Route path="/reports" element={<ReportsPage />} />
                 <Route path="/settings" element={<SettingsPage />} />
+                <Route path="/maintenance" element={<MaintenanceDashboard />} />
+                <Route path="/maintenance/equipment" element={<EquipmentPage />} />
+                <Route path="/maintenance/health" element={<HealthScoresPage />} />
+                <Route path="/maintenance/predictions" element={<PredictionsPage />} />
+                <Route path="/maintenance/schedule" element={<SchedulePage />} />
+                <Route path="/maintenance/alerts" element={<AlertsManagementPage />} />
               </Routes>
             </main>
           </div>

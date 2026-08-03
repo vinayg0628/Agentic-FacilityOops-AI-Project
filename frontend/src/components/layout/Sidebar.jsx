@@ -9,7 +9,13 @@ import {
   FileText,
   Settings,
   Cpu,
-  ChevronRight
+  ChevronRight,
+  Wrench,
+  Activity,
+  Gauge,
+  Calendar,
+  BellDot,
+  BarChart2
 } from 'lucide-react';
 
 const navItems = [
@@ -20,6 +26,15 @@ const navItems = [
   { path: '/recommendations', name: 'Recommendations', icon: Lightbulb },
   { path: '/reports', name: 'Reports', icon: FileText },
   { path: '/settings', name: 'Settings', icon: Settings },
+];
+
+const maintenanceNavItems = [
+  { path: '/maintenance', name: 'PM Dashboard', icon: Wrench },
+  { path: '/maintenance/equipment', name: 'Equipment', icon: Activity },
+  { path: '/maintenance/health', name: 'Health Scores', icon: Gauge },
+  { path: '/maintenance/predictions', name: 'Predictions', icon: BarChart2 },
+  { path: '/maintenance/schedule', name: 'Schedule', icon: Calendar },
+  { path: '/maintenance/alerts', name: 'PM Alerts', icon: BellDot, badge: 'AI' },
 ];
 
 export const Sidebar = () => {
@@ -58,6 +73,47 @@ export const Sidebar = () => {
                           </span>
                         )}
                         <ChevronRight className={`w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity ${isActive ? 'opacity-100 text-cyan-400' : 'text-slate-500'}`} />
+                      </div>
+                    </>
+                  )}
+                </NavLink>
+              );
+            })}
+          </nav>
+        </div>
+
+        <div className="mt-6">
+          <p className="px-3 text-[10px] font-bold tracking-wider text-slate-400 uppercase mb-3">
+            Predictive Maintenance
+          </p>
+          <nav className="space-y-1.5">
+            {maintenanceNavItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <NavLink
+                  key={item.path}
+                  to={item.path}
+                  className={({ isActive }) =>
+                    `flex items-center justify-between px-3 py-2.5 rounded-xl text-xs transition-all group cursor-pointer ${
+                      isActive
+                        ? 'bg-gradient-to-r from-violet-500/20 to-purple-500/20 text-violet-400 border border-violet-500/30 font-bold shadow-sm'
+                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 font-medium'
+                    }`
+                  }
+                >
+                  {({ isActive }) => (
+                    <>
+                      <div className="flex items-center gap-3">
+                        <Icon className={`w-4 h-4 transition-colors ${isActive ? 'text-violet-400' : 'text-slate-400 group-hover:text-slate-200'}`} />
+                        <span>{item.name}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        {item.badge && (
+                          <span className="px-1.5 py-0.5 text-[9px] font-bold rounded-full bg-violet-500/20 text-violet-300 border border-violet-500/40">
+                            {item.badge}
+                          </span>
+                        )}
+                        <ChevronRight className={`w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity ${isActive ? 'opacity-100 text-violet-400' : 'text-slate-500'}`} />
                       </div>
                     </>
                   )}
