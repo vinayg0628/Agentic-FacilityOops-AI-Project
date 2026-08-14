@@ -60,17 +60,20 @@ export const DashboardPage = () => {
         fetchRecommendations(facId)
       ]);
 
-      setFacilities(facRes.data);
-      setAnalytics(analyticsRes.data);
-      setExecSummary(execRes.data);
-      setAlerts(alertsRes.data);
-      setRecommendations(recsRes.data);
+      const facList = Array.isArray(facRes) ? facRes : (facRes?.data || []);
+      const analyticsObj = analyticsRes?.hourly_trend ? analyticsRes : (analyticsRes?.data || analyticsRes || {});
+      const alertsList = Array.isArray(alertsRes) ? alertsRes : (alertsRes?.data || []);
+      const recsList = Array.isArray(recsRes) ? recsRes : (recsRes?.data || []);
 
-      if (analyticsRes.data) {
-        setHourlyData(analyticsRes.data.hourly_trend || []);
-        setMonthlyData(analyticsRes.data.monthly_trend || []);
-        setFacilityCompare(analyticsRes.data.facility_comparison || []);
-      }
+      setFacilities(facList);
+      setAnalytics(analyticsObj);
+      setExecSummary(execRes?.data || execRes || {});
+      setAlerts(alertsList);
+      setRecommendations(recsList);
+
+      setHourlyData(analyticsObj.hourly_trend || []);
+      setMonthlyData(analyticsObj.monthly_trend || []);
+      setFacilityCompare(analyticsObj.facility_comparison || []);
     } catch (err) {
       console.error("Error loading dashboard telemetry data:", err);
     } finally {
@@ -78,7 +81,7 @@ export const DashboardPage = () => {
     }
   };
 
-  const metrics = analytics?.metrics || {};
+  const metrics = analytics || {};
 
   return (
     <div className="space-y-6">
@@ -114,15 +117,15 @@ export const DashboardPage = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <KpiCard 
           title="Total Energy Demand"
-          value={metrics.total_energy_kwh || 0}
+          value={metrics.total_electricity_kwh || metrics.total_energy_kwh || 0}
           unit="kWh"
-          changePct={-4.2}
+          changePct={metrics.electricity_change_pct !== undefined ? metrics.electricity_change_pct : -4.2}
           icon={Zap}
           color="cyan"
         />
         <KpiCard 
           title="HVAC Load Contribution"
-          value={metrics.hvac_kwh || 0}
+          value={metrics.hvac_total_kwh || metrics.hvac_kwh || 0}
           unit="kWh"
           changePct={2.8}
           icon={Activity}
@@ -130,7 +133,7 @@ export const DashboardPage = () => {
         />
         <KpiCard 
           title="Solar Self-Generation"
-          value={metrics.solar_kwh || 0}
+          value={metrics.solar_total_kwh || metrics.solar_kwh || 0}
           unit="kWh"
           changePct={12.4}
           icon={Sun}

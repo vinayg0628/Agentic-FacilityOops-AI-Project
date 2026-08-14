@@ -54,8 +54,6 @@ export const Navbar = ({ activeAlertsCount = 0 }) => {
     setSelectedFacilityId,
     searchQuery,
     setSearchQuery,
-    dateFilter,
-    setDateFilter,
     theme,
     toggleTheme,
     setIsIngestModalOpen
@@ -311,23 +309,6 @@ export const Navbar = ({ activeAlertsCount = 0 }) => {
                 )}
               </div>
             )}
-          </div>
-
-          {/* Date Filter Pills */}
-          <div className="hidden lg:flex items-center bg-slate-900/70 p-1 rounded-xl border border-slate-800 text-xs font-medium text-slate-400">
-            {['Today', 'Week', 'Month', 'Year'].map((filter) => (
-              <button
-                key={filter}
-                onClick={() => setDateFilter(filter)}
-                className={`px-3 py-1 rounded-lg transition-all cursor-pointer ${
-                  dateFilter === filter
-                    ? 'bg-cyan-500 text-slate-950 font-bold shadow-sm'
-                    : 'hover:text-slate-200'
-                }`}
-              >
-                {filter}
-              </button>
-            ))}
           </div>
         </div>
 

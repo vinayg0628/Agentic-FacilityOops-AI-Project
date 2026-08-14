@@ -7,7 +7,6 @@ export const FacilityProvider = ({ children }) => {
   const [facilities, setFacilities] = useState([]);
   const [selectedFacilityId, setSelectedFacilityId] = useState('ALL');
   const [searchQuery, setSearchQuery] = useState('');
-  const [dateFilter, setDateFilter] = useState('Month'); // Today, Week, Month, Year
   const [theme, setTheme] = useState('dark');
   const [isIngestModalOpen, setIsIngestModalOpen] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -50,8 +49,6 @@ export const FacilityProvider = ({ children }) => {
       setSelectedFacilityId,
       searchQuery,
       setSearchQuery,
-      dateFilter,
-      setDateFilter,
       theme,
       toggleTheme,
       isIngestModalOpen,

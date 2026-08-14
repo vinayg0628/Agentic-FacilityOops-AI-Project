@@ -1,147 +1,256 @@
-import React from 'react';
-import { NavLink } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
-  Zap, 
-  BarChart3, 
-  AlertTriangle, 
-  Lightbulb, 
+import React, { useState } from 'react';
+import { NavLink, useLocation } from 'react-router-dom';
+import {
+  LayoutDashboard,
+  Zap,
+  BarChart3,
+  AlertTriangle,
+  Lightbulb,
   FileText,
   Settings,
   Cpu,
+  ChevronDown,
   ChevronRight,
   Wrench,
   Activity,
   Gauge,
   Calendar,
   BellDot,
-  BarChart2
+  BarChart2,
 } from 'lucide-react';
 
-const navItems = [
-  { path: '/', name: 'Dashboard', icon: LayoutDashboard },
-  { path: '/energy', name: 'Energy Monitoring', icon: Zap },
-  { path: '/analytics', name: 'Analytics', icon: BarChart3 },
-  { path: '/alerts', name: 'Alerts', icon: AlertTriangle, badge: 'AI' },
-  { path: '/recommendations', name: 'Recommendations', icon: Lightbulb },
-  { path: '/reports', name: 'Reports', icon: FileText },
-  { path: '/settings', name: 'Settings', icon: Settings },
+// ── Agent definitions ─────────────────────────────────────────────────────────
+const AGENTS = [
+  {
+    id: 'energy',
+    label: 'Energy Agent',
+    accentFrom: 'from-cyan-500/20',
+    accentTo: 'to-blue-500/20',
+    accentBorder: 'border-cyan-500/30',
+    accentText: 'text-cyan-400',
+    headerActiveBg: 'bg-gradient-to-r from-cyan-900/50 to-blue-900/40',
+    headerInactiveBg: 'bg-slate-800/50',
+    dotActiveColor: 'bg-cyan-400',
+    badgeBg: 'bg-cyan-500/20',
+    badgeText: 'text-cyan-300',
+    badgeBorder: 'border-cyan-500/40',
+    rootPaths: ['/', '/energy', '/analytics', '/alerts', '/recommendations', '/reports', '/settings'],
+    items: [
+      { path: '/',                name: 'Dashboard',        icon: LayoutDashboard },
+      { path: '/energy',          name: 'Energy Monitoring', icon: Zap },
+      { path: '/analytics',       name: 'Analytics',         icon: BarChart3 },
+      { path: '/alerts',          name: 'Alerts',            icon: AlertTriangle, badge: 'AI' },
+      { path: '/recommendations', name: 'Recommendations',   icon: Lightbulb },
+      { path: '/reports',         name: 'Reports',           icon: FileText },
+    ],
+  },
+  {
+    id: 'maintenance',
+    label: 'Maintenance Agent',
+    accentFrom: 'from-violet-500/20',
+    accentTo: 'to-purple-500/20',
+    accentBorder: 'border-violet-500/30',
+    accentText: 'text-violet-400',
+    headerActiveBg: 'bg-gradient-to-r from-violet-900/50 to-purple-900/40',
+    headerInactiveBg: 'bg-slate-800/50',
+    dotActiveColor: 'bg-violet-400',
+    badgeBg: 'bg-violet-500/20',
+    badgeText: 'text-violet-300',
+    badgeBorder: 'border-violet-500/40',
+    rootPaths: ['/maintenance'],
+    items: [
+      { path: '/maintenance',             name: 'PM Dashboard',  icon: Wrench },
+      { path: '/maintenance/equipment',   name: 'Equipment',     icon: Activity },
+      { path: '/maintenance/health',      name: 'Health Scores', icon: Gauge },
+      { path: '/maintenance/predictions', name: 'Predictions',   icon: BarChart2 },
+      { path: '/maintenance/schedule',    name: 'Schedule',      icon: Calendar },
+      { path: '/maintenance/alerts',      name: 'PM Alerts',     icon: BellDot, badge: 'AI' },
+    ],
+  },
 ];
 
-const maintenanceNavItems = [
-  { path: '/maintenance', name: 'PM Dashboard', icon: Wrench },
-  { path: '/maintenance/equipment', name: 'Equipment', icon: Activity },
-  { path: '/maintenance/health', name: 'Health Scores', icon: Gauge },
-  { path: '/maintenance/predictions', name: 'Predictions', icon: BarChart2 },
-  { path: '/maintenance/schedule', name: 'Schedule', icon: Calendar },
-  { path: '/maintenance/alerts', name: 'PM Alerts', icon: BellDot, badge: 'AI' },
-];
+// ── Helper: is any child path active ─────────────────────────────────────────
+function isAgentActive(agent, pathname) {
+  return agent.rootPaths.some((p) =>
+    p === '/' ? pathname === '/' : pathname.startsWith(p)
+  );
+}
 
-export const Sidebar = () => {
+// ── AgentSection ──────────────────────────────────────────────────────────────
+const AgentSection = ({ agent, isOpen, onToggle }) => {
+  const { pathname } = useLocation();
+  const active = isAgentActive(agent, pathname);
+
   return (
-    <aside className="w-64 min-h-[calc(100vh-65px)] bg-slate-900/60 border-r border-slate-800 p-4 flex flex-col justify-between shrink-0 backdrop-blur-lg">
-      <div className="space-y-6">
-        <div>
-          <p className="px-3 text-[10px] font-bold tracking-wider text-slate-400 uppercase mb-3">
-            Agentic AI Modules
-          </p>
-          <nav className="space-y-1.5">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              return (
-                <NavLink
-                  key={item.path}
-                  to={item.path}
-                  className={({ isActive }) =>
-                    `flex items-center justify-between px-3 py-2.5 rounded-xl text-xs transition-all group cursor-pointer ${
-                      isActive
-                        ? 'bg-gradient-to-r from-cyan-500/20 to-blue-500/20 text-cyan-400 border border-cyan-500/30 font-bold shadow-sm'
-                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 font-medium'
-                    }`
-                  }
-                >
-                  {({ isActive }) => (
-                    <>
-                      <div className="flex items-center gap-3">
-                        <Icon className={`w-4 h-4 transition-colors ${isActive ? 'text-cyan-400' : 'text-slate-400 group-hover:text-slate-200'}`} />
-                        <span>{item.name}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        {item.badge && (
-                          <span className="px-1.5 py-0.5 text-[9px] font-bold rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">
-                            {item.badge}
-                          </span>
-                        )}
-                        <ChevronRight className={`w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity ${isActive ? 'opacity-100 text-cyan-400' : 'text-slate-500'}`} />
-                      </div>
-                    </>
-                  )}
-                </NavLink>
-              );
-            })}
-          </nav>
-        </div>
+    <div className={`rounded-2xl overflow-hidden border transition-all duration-200 ${
+      active ? agent.accentBorder : 'border-slate-800/60'
+    }`}>
 
-        <div className="mt-6">
-          <p className="px-3 text-[10px] font-bold tracking-wider text-slate-400 uppercase mb-3">
-            Predictive Maintenance
-          </p>
-          <nav className="space-y-1.5">
-            {maintenanceNavItems.map((item) => {
-              const Icon = item.icon;
-              return (
-                <NavLink
-                  key={item.path}
-                  to={item.path}
-                  className={({ isActive }) =>
-                    `flex items-center justify-between px-3 py-2.5 rounded-xl text-xs transition-all group cursor-pointer ${
-                      isActive
-                        ? 'bg-gradient-to-r from-violet-500/20 to-purple-500/20 text-violet-400 border border-violet-500/30 font-bold shadow-sm'
-                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 font-medium'
-                    }`
-                  }
-                >
-                  {({ isActive }) => (
-                    <>
-                      <div className="flex items-center gap-3">
-                        <Icon className={`w-4 h-4 transition-colors ${isActive ? 'text-violet-400' : 'text-slate-400 group-hover:text-slate-200'}`} />
-                        <span>{item.name}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        {item.badge && (
-                          <span className="px-1.5 py-0.5 text-[9px] font-bold rounded-full bg-violet-500/20 text-violet-300 border border-violet-500/40">
-                            {item.badge}
-                          </span>
-                        )}
-                        <ChevronRight className={`w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity ${isActive ? 'opacity-100 text-violet-400' : 'text-slate-500'}`} />
-                      </div>
-                    </>
-                  )}
-                </NavLink>
-              );
-            })}
-          </nav>
+      {/* Header / toggle button */}
+      <button
+        onClick={onToggle}
+        className={`w-full flex items-center justify-between px-3.5 py-3 transition-all duration-200 ${
+          active ? agent.headerActiveBg : agent.headerInactiveBg
+        } hover:brightness-110`}
+      >
+        <div className="flex items-center gap-2.5">
+          {/* Status dot */}
+          <span className={`w-2 h-2 rounded-full shrink-0 transition-colors ${
+            active ? `${agent.dotActiveColor} animate-pulse` : 'bg-slate-600'
+          }`} />
+          <span className={`text-[10px] font-bold tracking-widest uppercase ${
+            active ? agent.accentText : 'text-slate-300'
+          }`}>
+            {agent.label}
+          </span>
         </div>
+        {isOpen
+          ? <ChevronDown className={`w-3.5 h-3.5 ${active ? agent.accentText : 'text-slate-500'}`} />
+          : <ChevronRight className={`w-3.5 h-3.5 ${active ? agent.accentText : 'text-slate-500'}`} />
+        }
+      </button>
 
-        <div className="p-3.5 rounded-2xl bg-gradient-to-br from-slate-950 to-slate-900 border border-cyan-900/40 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-cyan-500/10 rounded-full blur-2xl pointer-events-none"></div>
+      {/* Sub-navigation — animated slide */}
+      <div className={`transition-all duration-300 overflow-hidden ${
+        isOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+      }`}>
+        <nav className="bg-slate-900/50 px-2 py-2 space-y-0.5 border-t border-slate-800/60">
+          {agent.items.map((item) => {
+            const Icon = item.icon;
+            return (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                end={item.path === '/'}
+                className={({ isActive }) =>
+                  `flex items-center justify-between pl-4 pr-2.5 py-2 rounded-xl text-xs transition-all duration-150 group cursor-pointer ${
+                    isActive
+                      ? `bg-gradient-to-r ${agent.accentFrom} ${agent.accentTo} ${agent.accentText} border ${agent.accentBorder} font-bold shadow-sm`
+                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 font-medium'
+                  }`
+                }
+              >
+                {({ isActive }) => (
+                  <>
+                    <div className="flex items-center gap-2.5">
+                      {/* connector dot */}
+                      <span className={`w-1 h-1 rounded-full shrink-0 ${
+                        isActive ? agent.dotActiveColor : 'bg-slate-700'
+                      }`} />
+                      <Icon className={`w-3.5 h-3.5 shrink-0 transition-colors ${
+                        isActive ? agent.accentText : 'text-slate-500 group-hover:text-slate-300'
+                      }`} />
+                      <span>{item.name}</span>
+                    </div>
+
+                    <div className="flex items-center gap-1 shrink-0">
+                      {item.badge && (
+                        <span className={`px-1.5 py-0.5 text-[9px] font-bold rounded-full border
+                          ${agent.badgeBg} ${agent.badgeText} ${agent.badgeBorder}`}>
+                          {item.badge}
+                        </span>
+                      )}
+                      <ChevronRight className={`w-3 h-3 transition-opacity
+                        ${isActive
+                          ? `opacity-100 ${agent.accentText}`
+                          : 'opacity-0 group-hover:opacity-70 text-slate-500'
+                        }`}
+                      />
+                    </div>
+                  </>
+                )}
+              </NavLink>
+            );
+          })}
+        </nav>
+      </div>
+    </div>
+  );
+};
+
+// ── Sidebar ───────────────────────────────────────────────────────────────────
+export const Sidebar = () => {
+  const { pathname } = useLocation();
+
+  // Auto-open the section that owns the current route; energy open by default
+  const [openSections, setOpenSections] = useState(() => ({
+    energy:      isAgentActive(AGENTS[0], pathname) || !isAgentActive(AGENTS[1], pathname),
+    maintenance: isAgentActive(AGENTS[1], pathname),
+  }));
+
+  const toggle = (id) =>
+    setOpenSections((prev) => ({ ...prev, [id]: !prev[id] }));
+
+  return (
+    <aside className="sticky top-[65px] self-start w-64 h-[calc(100vh-65px)] bg-slate-900/60 border-r border-slate-800
+                      p-4 flex flex-col justify-between shrink-0 backdrop-blur-lg overflow-y-auto">
+      <div className="space-y-3">
+
+        {/* Top label */}
+        <p className="px-1 text-[10px] font-bold tracking-widest text-slate-500 uppercase mb-1">
+          Agentic AI Modules
+        </p>
+
+        {/* 2 accordion rows */}
+        {AGENTS.map((agent) => (
+          <AgentSection
+            key={agent.id}
+            agent={agent}
+            isOpen={openSections[agent.id]}
+            onToggle={() => toggle(agent.id)}
+          />
+        ))}
+
+        <NavLink
+          to="/settings"
+          className={({ isActive }) =>
+            `flex items-center justify-between px-3.5 py-3 rounded-2xl border transition-all duration-200 ${
+              isActive
+                ? 'bg-gradient-to-r from-slate-700/80 to-slate-800/80 border-slate-600 text-slate-100 shadow-sm'
+                : 'bg-slate-800/50 border-slate-800/60 text-slate-300 hover:text-slate-100 hover:bg-slate-800/80'
+            }`
+          }
+        >
+          {({ isActive }) => (
+            <>
+              <div className="flex items-center gap-2.5">
+                <span className={`w-2 h-2 rounded-full shrink-0 ${isActive ? 'bg-slate-200' : 'bg-slate-600'}`} />
+                <Settings className={`w-3.5 h-3.5 ${isActive ? 'text-slate-100' : 'text-slate-400'}`} />
+                <span className="text-[10px] font-bold tracking-widest uppercase">Settings</span>
+              </div>
+              <ChevronRight className={`w-3.5 h-3.5 ${isActive ? 'text-slate-100' : 'text-slate-500'}`} />
+            </>
+          )}
+        </NavLink>
+
+        {/* Intelligence Engine status card */}
+        <div className="p-3.5 rounded-2xl bg-gradient-to-br from-slate-950 to-slate-900
+                        border border-cyan-900/40 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-cyan-500/10 rounded-full
+                          blur-2xl pointer-events-none" />
           <div className="flex items-center gap-2 mb-2">
             <Cpu className="w-4 h-4 text-cyan-400 animate-pulse" />
             <span className="text-xs font-bold text-slate-200">Intelligence Engine</span>
           </div>
           <p className="text-[11px] text-slate-400 leading-relaxed mb-3">
-            5 Domain AI Agents orchestrating multi-tenant IoT streams continuously.
+            2 AI Agents orchestrating multi-tenant IoT streams continuously.
           </p>
-          <div className="flex items-center justify-between text-[10px] text-slate-400 bg-slate-900 p-2 rounded-lg border border-slate-800">
+          <div className="flex items-center justify-between text-[10px] text-slate-400
+                          bg-slate-900 p-2 rounded-lg border border-slate-800">
             <span>Engine Core:</span>
             <span className="text-emerald-400 font-mono font-bold">Multi-Agent v1.2</span>
           </div>
         </div>
+
       </div>
 
-      <div className="pt-4 border-t border-slate-800 text-[11px] text-slate-500 flex justify-between items-center font-medium">
+      {/* Footer */}
+      <div className="pt-4 border-t border-slate-800 text-[11px] text-slate-500
+                      flex justify-between items-center font-medium">
         <span>FacilityOps AI</span>
-        <span className="text-[10px] font-mono bg-slate-800 px-2 py-0.5 rounded text-slate-400">v1.0.0</span>
+        <span className="text-[10px] font-mono bg-slate-800 px-2 py-0.5 rounded text-slate-400">
+          v1.0.0
+        </span>
       </div>
     </aside>
   );

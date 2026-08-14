@@ -47,6 +47,19 @@ def startup_event():
     finally:
         db.close()
 
+    # ── Live Replay (demo mode) ───────────────────────────────────────────────
+    # Controlled entirely by REPLAY_MODE env var — no-op when False.
+    if settings.REPLAY_MODE:
+        from app.services.replay_service import start_replay
+        start_replay()
+        logger.info(
+            "Live replay service started | interval=%ss | duration=%s",
+            settings.REPLAY_INTERVAL_SECONDS,
+            f"{settings.REPLAY_DURATION_MINUTES} min"
+            if settings.REPLAY_DURATION_MINUTES is not None
+            else "indefinite",
+        )
+
 # Include Routers
 app.include_router(facilities.router, prefix=settings.API_V1_STR)
 app.include_router(energy.router, prefix=settings.API_V1_STR)

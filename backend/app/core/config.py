@@ -1,6 +1,6 @@
 import os
 from pydantic_settings import BaseSettings
-from typing import List
+from typing import List, Optional
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "Agentic FacilityOps AI Platform"
@@ -42,6 +42,15 @@ class Settings(BaseSettings):
     POWER_SURGE_PERCENT: float = 25.0
     POWER_ELEVATED_PERCENT: float = 15.0
     HUMIDITY_HIGH_THRESHOLD: float = 85.0
+
+    # ── Replay / Live Demo ────────────────────────────────
+    # Set REPLAY_MODE=true to stream CSV rows into the DB row-by-row on a timer.
+    # REPLAY_INTERVAL_SECONDS controls how often a new row is inserted.
+    # REPLAY_DURATION_MINUTES bounds the session; leave unset (None) for the
+    # original indefinite-loop behaviour — this is NOT a breaking change.
+    REPLAY_MODE: bool = False
+    REPLAY_INTERVAL_SECONDS: int = 15
+    REPLAY_DURATION_MINUTES: Optional[int] = None
 
     class Config:
         case_sensitive = True

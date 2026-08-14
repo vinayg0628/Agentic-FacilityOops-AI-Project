@@ -1,20 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Filter, Plus, LayoutGrid, List } from 'lucide-react';
+import { useFacility } from '../../context/FacilityContext';
 import { fetchEquipmentList } from '../../services/maintenanceApi';
 import { EquipmentCard } from '../../components/maintenance/EquipmentCard';
 import { RiskBadge } from '../../components/maintenance/RiskBadge';
 
 export const EquipmentPage = () => {
+  const { selectedFacilityId } = useFacility();
   const [equipmentList, setEquipmentList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState('grid'); // grid | table
   const [searchTerm, setSearchTerm] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
+  const [filterType, setFilterType] = useState('ALL');
+  const [filterStatus, setFilterStatus] = useState('ALL');
 
   useEffect(() => {
     const loadEquipment = async () => {
       setLoading(true);
       try {
-        const data = await fetchEquipmentList();
+        const data = await fetchEquipmentList(selectedFacilityId, 'ALL', 'ALL');
         setEquipmentList(data);
       } catch (error) {
         console.error("Failed to fetch equipment", error);
@@ -22,7 +27,7 @@ export const EquipmentPage = () => {
       setLoading(false);
     };
     loadEquipment();
-  }, []);
+  }, [selectedFacilityId]);
 
   // Normalize fields — supports real API (equipment_name, equipment_type, equipment_id)
   // and mock data (name, type, id)
@@ -31,12 +36,20 @@ export const EquipmentPage = () => {
     _id:   eq.equipment_id   ?? eq.id,
     _name: eq.equipment_name ?? eq.name ?? '',
     _type: eq.equipment_type ?? eq.type ?? '',
+    _status: eq.status ?? 'Operational',
   }));
 
-  const filteredList = normalized.filter(eq =>
-    eq._name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    eq._type.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredList = normalized.filter(eq => {
+    const matchesSearch = eq._name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          eq._type.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesType = filterType === 'ALL' || eq._type === filterType;
+    const matchesStatus = filterStatus === 'ALL' || eq._status === filterStatus;
+    return matchesSearch && matchesType && matchesStatus;
+  });
+
+  // Get unique types and statuses for filter dropdowns
+  const uniqueTypes = ['ALL', ...new Set(normalized.map(eq => eq._type))];
+  const uniqueStatuses = ['ALL', ...new Set(normalized.map(eq => eq._status))];
 
   return (
     <div className="space-y-6 pb-12">
@@ -62,9 +75,48 @@ export const EquipmentPage = () => {
           />
         </div>
         <div className="flex items-center gap-3 w-full sm:w-auto">
-          <button className="flex items-center gap-2 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm rounded-xl transition-colors border border-slate-700">
-            <Filter className="w-4 h-4" /> Filters
-          </button>
+          <div className="relative">
+            <button 
+              onClick={() => setShowFilters(!showFilters)}
+              className="flex items-center gap-2 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm rounded-xl transition-colors border border-slate-700"
+            >
+              <Filter className="w-4 h-4" /> Filters {(filterType !== 'ALL' || filterStatus !== 'ALL') && <span className="ml-1 text-cyan-400 font-bold">●</span>}
+            </button>
+            {showFilters && (
+              <div className="absolute top-full mt-2 right-0 bg-slate-900 border border-slate-700 rounded-xl shadow-lg z-50 w-64 p-4 space-y-4">
+                <div>
+                  <label className="block text-xs text-slate-400 font-bold mb-2">Equipment Type</label>
+                  <select 
+                    value={filterType} 
+                    onChange={(e) => setFilterType(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none"
+                  >
+                    {uniqueTypes.map(type => (
+                      <option key={type} value={type}>{type}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs text-slate-400 font-bold mb-2">Status</label>
+                  <select 
+                    value={filterStatus} 
+                    onChange={(e) => setFilterStatus(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-700 text-slate-200 text-sm rounded-lg px-3 py-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none"
+                  >
+                    {uniqueStatuses.map(status => (
+                      <option key={status} value={status}>{status}</option>
+                    ))}
+                  </select>
+                </div>
+                <button 
+                  onClick={() => { setFilterType('ALL'); setFilterStatus('ALL'); }}
+                  className="w-full px-3 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-bold rounded-lg transition-colors"
+                >
+                  Reset Filters
+                </button>
+              </div>
+            )}
+          </div>
           <div className="flex bg-slate-950 rounded-lg p-1 border border-slate-800">
             <button 
               onClick={() => setViewMode('grid')}
@@ -101,6 +153,7 @@ export const EquipmentPage = () => {
                   <th className="p-4 font-medium">ID</th>
                   <th className="p-4 font-medium">Equipment Name</th>
                   <th className="p-4 font-medium">Type</th>
+                  <th className="p-4 font-medium">Facility</th>
                   <th className="p-4 font-medium">Health</th>
                   <th className="p-4 font-medium">Status</th>
                   <th className="p-4 font-medium text-right">Actions</th>
@@ -112,6 +165,7 @@ export const EquipmentPage = () => {
                     <td className="p-4 text-sm text-slate-500 font-mono">{eq._id}</td>
                     <td className="p-4 text-sm font-bold text-slate-200">{eq._name}</td>
                     <td className="p-4 text-sm text-slate-400">{eq._type}</td>
+                    <td className="p-4 text-sm text-slate-400">{eq.facility_name || 'Unknown'}</td>
                     <td className="p-4">
                       <div className="flex items-center gap-3">
                         <span className={`text-sm font-bold ${eq.health_score > 75 ? 'text-emerald-400' : eq.health_score > 50 ? 'text-amber-400' : 'text-rose-400'}`}>

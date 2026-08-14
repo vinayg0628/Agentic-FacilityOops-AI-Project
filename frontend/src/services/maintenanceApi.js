@@ -155,7 +155,16 @@ export const fetchPredictions = async (facilityId = 'ALL') => {
     const params = {};
     if (facilityId && facilityId !== 'ALL') params.facility_id = facilityId;
     const res = await apiClient.get('/maintenance/predictions', { params });
-    return res.data;
+
+    return (Array.isArray(res.data) ? res.data : []).map(item => ({
+      id: item.id ?? item.equipment_id ?? item.name ?? 'unknown',
+      name: item.name ?? item.equipment_name ?? 'Unknown',
+      type: item.type ?? item.equipment_type ?? 'Equipment',
+      risk_score: Number(item.risk_score ?? item.failure_probability_pct ?? 0),
+      health_score: Number(item.health_score ?? (100 - (item.risk_score ?? item.failure_probability_pct ?? 0))),
+      predicted_failure_date: item.predicted_failure_date ?? new Date().toISOString(),
+      remaining_useful_life: Number(item.remaining_useful_life ?? item.rul_days ?? 0),
+    }));
   } catch (error) {
     console.warn('Using mock predictions');
     return MOCK_PREDICTIONS;
@@ -169,7 +178,19 @@ export const fetchMaintenanceSchedule = async (equipmentId = null, status = 'ALL
     if (status !== 'ALL') params.status = status;
     if (priority !== 'ALL') params.priority = priority;
     const res = await apiClient.get('/maintenance/schedule', { params });
-    return res.data;
+
+    return (Array.isArray(res.data) ? res.data : []).map(item => ({
+      id: item.schedule_id ?? item.id,
+      equipment: item.equipment_name ?? item.equipment ?? 'Unknown',
+      type: item.equipment_type ?? item.type ?? 'Equipment',
+      maintenance_type: item.maintenance_type ?? 'Preventive',
+      scheduled_date: item.next_service_date ?? item.scheduled_date ?? '',
+      priority: item.priority ?? 'Medium',
+      engineer: item.assigned_engineer ?? item.engineer ?? 'Unassigned',
+      status: item.status ?? 'Scheduled',
+      est_duration: item.estimated_duration_hours ?? item.est_duration ?? 0,
+      est_cost: item.estimated_cost_usd ?? item.est_cost ?? 0,
+    }));
   } catch (error) {
     console.warn('Using mock schedule');
     let filtered = MOCK_SCHEDULE;

@@ -50,8 +50,16 @@ def list_schedules(
         
     schedules = query.all()
     return [{
-        **s.__dict__,
-        'equipment_name': s.equipment.equipment_name
+        'schedule_id': s.schedule_id,
+        'equipment_name': s.equipment.equipment_name,
+        'equipment_type': s.equipment.equipment_type,
+        'next_service_date': s.next_service_date.isoformat() if s.next_service_date else None,
+        'maintenance_type': s.maintenance_type,
+        'priority': s.priority,
+        'assigned_engineer': s.assigned_engineer,
+        'status': s.status,
+        'estimated_duration_hours': s.estimated_duration_hours,
+        'estimated_cost_usd': s.estimated_cost_usd,
     } for s in schedules]
 
 @router.get('/alerts')

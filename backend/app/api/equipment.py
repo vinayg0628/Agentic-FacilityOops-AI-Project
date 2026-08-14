@@ -34,6 +34,7 @@ class EquipmentResponse(EquipmentCreate):
     facility_name: Optional[str] = None
     health_score: Optional[float] = None
     health_category: Optional[str] = None
+    metrics: Optional[dict] = None
 
     class Config:
         from_attributes = True
@@ -69,6 +70,7 @@ def list_equipment(
         score = agent.calculate_health_score(eq.equipment_type, records_dict)
         cat = agent.get_health_category(score)
         
+        latest_record = records[-1] if records else None
         results.append({
             'equipment_id': eq.equipment_id,
             'facility_id': eq.facility_id,
@@ -81,7 +83,12 @@ def list_equipment(
             'location': eq.location,
             'status': eq.status,
             'health_score': round(score, 1),
-            'health_category': cat
+            'health_category': cat,
+            'metrics': {
+                'temp': round(latest_record.temperature, 1) if latest_record else None,
+                'vibration': round(latest_record.vibration, 3) if latest_record else None,
+                'runtime': latest_record.runtime_hours if latest_record else None
+            }
         })
     return results
 
@@ -103,6 +110,7 @@ def get_equipment(equipment_id: int, db: Session = Depends(get_db)):
     score = agent.calculate_health_score(eq.equipment_type, records_dict)
     cat = agent.get_health_category(score)
     
+    latest_record = records[-1] if records else None
     return {
         'equipment_id': eq.equipment_id,
         'facility_id': eq.facility_id,
@@ -115,7 +123,12 @@ def get_equipment(equipment_id: int, db: Session = Depends(get_db)):
         'location': eq.location,
         'status': eq.status,
         'health_score': round(score, 1),
-        'health_category': cat
+        'health_category': cat,
+        'metrics': {
+            'temp': round(latest_record.temperature, 1) if latest_record else None,
+            'vibration': round(latest_record.vibration, 3) if latest_record else None,
+            'runtime': latest_record.runtime_hours if latest_record else None
+        }
     }
 
 @router.post('/', response_model=EquipmentResponse)

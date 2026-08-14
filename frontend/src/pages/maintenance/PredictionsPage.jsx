@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { BarChart2, AlertTriangle, Calendar, Settings } from 'lucide-react';
 import { fetchPredictions } from '../../services/maintenanceApi';
 
 export const PredictionsPage = () => {
+  const navigate = useNavigate();
   const [predictions, setPredictions] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -21,6 +23,10 @@ export const PredictionsPage = () => {
   }, []);
 
   const formatDate = (iso) => new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+  const handleScheduleClick = () => {
+    navigate('/maintenance/schedule');
+  };
 
   const getRulColor = (days) => {
     if (days < 30) return 'bg-rose-500';
@@ -98,7 +104,10 @@ export const PredictionsPage = () => {
                       </div>
                     </td>
                     <td className="p-4 text-right">
-                      <button className="px-3 py-1.5 bg-violet-500/10 hover:bg-violet-500/20 text-violet-400 border border-violet-500/30 rounded-lg text-xs font-bold transition-colors flex items-center gap-2 ml-auto">
+                      <button
+                        onClick={handleScheduleClick}
+                        className="px-3 py-1.5 bg-violet-500/10 hover:bg-violet-500/20 text-violet-400 border border-violet-500/30 rounded-lg text-xs font-bold transition-colors flex items-center gap-2 ml-auto"
+                      >
                         <Settings className="w-3.5 h-3.5" /> Schedule
                       </button>
                     </td>

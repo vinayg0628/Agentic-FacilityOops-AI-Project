@@ -118,17 +118,45 @@ def compute_energy_analytics(db: Session, facility_id: str = None, start_date: s
             "is_peak": (h == peak_hour or (peak_kwh > 0 and avg_h_kwh >= peak_kwh * 0.9))
         })
 
-    # Hourly Trend (Average across recent day or last 24h)
+    # Hourly Trend (Full 24-Hour Diurnal Telemetry Stream)
     df_recent_24 = df[df["timestamp"] >= (df["timestamp"].max() - timedelta(hours=24))]
+    if len(df_recent_24) >= 12:
+        df_hourly_agg = df_recent_24.groupby("hour").agg({
+            "electricity_kwh": "mean",
+            "hvac_kwh": "mean",
+            "lighting_kwh": "mean",
+            "solar_generation_kwh": "mean",
+            "water_liters": "mean"
+        }).reset_index()
+    else:
+        df_hourly_agg = df.groupby("hour").agg({
+            "electricity_kwh": "mean",
+            "hvac_kwh": "mean",
+            "lighting_kwh": "mean",
+            "solar_generation_kwh": "mean",
+            "water_liters": "mean"
+        }).reset_index()
+
     hourly_trend = []
-    for _, row in df_recent_24.iterrows():
+    for h in range(24):
+        match_row = df_hourly_agg[df_hourly_agg["hour"] == h]
+        if not match_row.empty:
+            r = match_row.iloc[0]
+            elec = round(float(r["electricity_kwh"]), 2)
+            hvac = round(float(r["hvac_kwh"]), 2)
+            light = round(float(r["lighting_kwh"]), 2)
+            solar = round(float(r["solar_generation_kwh"]), 2)
+            water = round(float(r["water_liters"]), 1)
+        else:
+            elec = hvac = light = solar = water = 0.0
+
         hourly_trend.append({
-            "hour": row["timestamp"].strftime("%H:%M"),
-            "electricity_kwh": round(float(row["electricity_kwh"]), 2),
-            "hvac_kwh": round(float(row["hvac_kwh"]), 2),
-            "lighting_kwh": round(float(row["lighting_kwh"]), 2),
-            "solar_kwh": round(float(row["solar_generation_kwh"]), 2),
-            "water_liters": round(float(row["water_liters"]), 1)
+            "hour": f"{h:02d}:00",
+            "electricity_kwh": elec,
+            "hvac_kwh": hvac,
+            "lighting_kwh": light,
+            "solar_kwh": solar,
+            "water_liters": water
         })
 
     # Daily Trend (Last 7 Days)
