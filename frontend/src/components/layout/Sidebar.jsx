@@ -17,6 +17,11 @@ import {
   Calendar,
   BellDot,
   BarChart2,
+  Users,
+  ShieldCheck,
+  Grid,
+  Shield,
+  AlertOctagon,
 } from 'lucide-react';
 
 // ── Agent definitions ─────────────────────────────────────────────────────────
@@ -67,6 +72,46 @@ const AGENTS = [
       { path: '/maintenance/alerts',      name: 'PM Alerts',     icon: BellDot, badge: 'AI' },
     ],
   },
+  {
+    id: 'occupancy',
+    label: 'Occupancy Agent',
+    accentFrom: 'from-emerald-500/20',
+    accentTo: 'to-teal-500/20',
+    accentBorder: 'border-emerald-500/30',
+    accentText: 'text-emerald-400',
+    headerActiveBg: 'bg-gradient-to-r from-emerald-900/50 to-teal-900/40',
+    headerInactiveBg: 'bg-slate-800/50',
+    dotActiveColor: 'bg-emerald-400',
+    badgeBg: 'bg-emerald-500/20',
+    badgeText: 'text-emerald-300',
+    badgeBorder: 'border-emerald-500/40',
+    rootPaths: ['/occupancy'],
+    items: [
+      { path: '/occupancy', name: 'Occupancy', icon: Users },
+      { path: '/occupancy/analytics', name: 'Analytics', icon: BarChart3 },
+      { path: '/occupancy/heatmap', name: 'Heatmap', icon: Grid },
+    ],
+  },
+  {
+    id: 'security',
+    label: 'Security Agent',
+    accentFrom: 'from-red-500/20',
+    accentTo: 'to-rose-500/20',
+    accentBorder: 'border-red-500/30',
+    accentText: 'text-red-400',
+    headerActiveBg: 'bg-gradient-to-r from-red-900/50 to-rose-900/40',
+    headerInactiveBg: 'bg-slate-800/50',
+    dotActiveColor: 'bg-red-400',
+    badgeBg: 'bg-red-500/20',
+    badgeText: 'text-red-300',
+    badgeBorder: 'border-red-500/40',
+    rootPaths: ['/security'],
+    items: [
+      { path: '/security', name: 'Security', icon: Shield },
+      { path: '/security/alerts', name: 'Alerts', icon: AlertTriangle, badge: 'LIVE' },
+      { path: '/security/incidents', name: 'Incidents', icon: AlertOctagon },
+    ],
+  },
 ];
 
 // ── Helper: is any child path active ─────────────────────────────────────────
@@ -114,7 +159,7 @@ const AgentSection = ({ agent, isOpen, onToggle }) => {
       <div className={`transition-all duration-300 overflow-hidden ${
         isOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
       }`}>
-        <nav className="bg-slate-900/50 px-2 py-2 space-y-0.5 border-t border-slate-800/60">
+        <nav className="sidebar-subnav bg-slate-900/50 px-2 py-2 space-y-0.5 border-t border-slate-800/60">
           {agent.items.map((item) => {
             const Icon = item.icon;
             return (
@@ -126,7 +171,7 @@ const AgentSection = ({ agent, isOpen, onToggle }) => {
                   `flex items-center justify-between pl-4 pr-2.5 py-2 rounded-xl text-xs transition-all duration-150 group cursor-pointer ${
                     isActive
                       ? `bg-gradient-to-r ${agent.accentFrom} ${agent.accentTo} ${agent.accentText} border ${agent.accentBorder} font-bold shadow-sm`
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 font-medium'
+                      : 'sidebar-nav-link text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 font-medium'
                   }`
                 }
               >
@@ -174,15 +219,22 @@ export const Sidebar = () => {
 
   // Auto-open the section that owns the current route; energy open by default
   const [openSections, setOpenSections] = useState(() => ({
-    energy:      isAgentActive(AGENTS[0], pathname) || !isAgentActive(AGENTS[1], pathname),
+    energy:      isAgentActive(AGENTS[0], pathname) || (!isAgentActive(AGENTS[1], pathname) && !isAgentActive(AGENTS[2], pathname) && !isAgentActive(AGENTS[3], pathname)),
     maintenance: isAgentActive(AGENTS[1], pathname),
+    occupancy:   isAgentActive(AGENTS[2], pathname),
+    security:    isAgentActive(AGENTS[3], pathname),
   }));
 
   const toggle = (id) =>
-    setOpenSections((prev) => ({ ...prev, [id]: !prev[id] }));
+    setOpenSections((prev) => ({
+      energy: id === 'energy' ? !prev.energy : false,
+      maintenance: id === 'maintenance' ? !prev.maintenance : false,
+      occupancy: id === 'occupancy' ? !prev.occupancy : false,
+      security: id === 'security' ? !prev.security : false,
+    }));
 
   return (
-    <aside className="sticky top-[65px] self-start w-64 h-[calc(100vh-65px)] bg-slate-900/60 border-r border-slate-800
+  <aside className="sidebar sticky top-[65px] self-start w-64 h-[calc(100vh-65px)] bg-slate-900/60 border-r border-slate-800
                       p-4 flex flex-col justify-between shrink-0 backdrop-blur-lg overflow-y-auto">
       <div className="space-y-3">
 
@@ -207,7 +259,7 @@ export const Sidebar = () => {
             `flex items-center justify-between px-3.5 py-3 rounded-2xl border transition-all duration-200 ${
               isActive
                 ? 'bg-gradient-to-r from-slate-700/80 to-slate-800/80 border-slate-600 text-slate-100 shadow-sm'
-                : 'bg-slate-800/50 border-slate-800/60 text-slate-300 hover:text-slate-100 hover:bg-slate-800/80'
+                : 'sidebar-settings-link bg-slate-800/50 border-slate-800/60 text-slate-300 hover:text-slate-100 hover:bg-slate-800/80'
             }`
           }
         >
@@ -224,7 +276,7 @@ export const Sidebar = () => {
         </NavLink>
 
         {/* Intelligence Engine status card */}
-        <div className="p-3.5 rounded-2xl bg-gradient-to-br from-slate-950 to-slate-900
+        <div className="sidebar-engine p-3.5 rounded-2xl bg-gradient-to-br from-slate-950 to-slate-900
                         border border-cyan-900/40 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-24 h-24 bg-cyan-500/10 rounded-full
                           blur-2xl pointer-events-none" />
@@ -233,10 +285,10 @@ export const Sidebar = () => {
             <span className="text-xs font-bold text-slate-200">Intelligence Engine</span>
           </div>
           <p className="text-[11px] text-slate-400 leading-relaxed mb-3">
-            2 AI Agents orchestrating multi-tenant IoT streams continuously.
+            4 AI Agents orchestrating multi-tenant IoT streams continuously.
           </p>
           <div className="flex items-center justify-between text-[10px] text-slate-400
-                          bg-slate-900 p-2 rounded-lg border border-slate-800">
+                          sidebar-engine-core bg-slate-900 p-2 rounded-lg border border-slate-800">
             <span>Engine Core:</span>
             <span className="text-emerald-400 font-mono font-bold">Multi-Agent v1.2</span>
           </div>
@@ -247,7 +299,7 @@ export const Sidebar = () => {
       {/* Footer */}
       <div className="pt-4 border-t border-slate-800 text-[11px] text-slate-500
                       flex justify-between items-center font-medium">
-        <span>FacilityOps AI</span>
+        <span>Smart FacilityOps AI</span>
         <span className="text-[10px] font-mono bg-slate-800 px-2 py-0.5 rounded text-slate-400">
           v1.0.0
         </span>

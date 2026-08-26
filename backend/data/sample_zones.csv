@@ -1,0 +1,16 @@
+zone_id,zone_name,zone_type,capacity,facility_id
+FAC-001-Z1,Zone 1,common_area,36,FAC-001
+FAC-001-Z2,Zone 2,meeting_room,92,FAC-001
+FAC-001-Z3,Zone 3,common_area,21,FAC-001
+FAC-002-Z1,Zone 1,meeting_room,49,FAC-002
+FAC-002-Z2,Zone 2,meeting_room,37,FAC-002
+FAC-002-Z3,Zone 3,common_area,58,FAC-002
+FAC-003-Z1,Zone 1,common_area,56,FAC-003
+FAC-003-Z2,Zone 2,parking,51,FAC-003
+FAC-003-Z3,Zone 3,common_area,37,FAC-003
+FAC-004-Z1,Zone 1,common_area,73,FAC-004
+FAC-004-Z2,Zone 2,common_area,62,FAC-004
+FAC-004-Z3,Zone 3,office,38,FAC-004
+FAC-005-Z1,Zone 1,meeting_room,100,FAC-005
+FAC-005-Z2,Zone 2,common_area,31,FAC-005
+FAC-005-Z3,Zone 3,office,37,FAC-005

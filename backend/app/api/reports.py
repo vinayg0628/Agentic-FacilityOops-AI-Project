@@ -107,7 +107,7 @@ def export_pdf(facility_id: Optional[str] = Query(None), db: Session = Depends(g
         spaceAfter=20
     )
 
-    elements.append(Paragraph("Agentic FacilityOps AI Platform", title_style))
+    elements.append(Paragraph("Agentic AI For Smart Facility Operations And Optimizations", title_style))
     elements.append(Paragraph(f"Energy Intelligence & Telemetry Audit Report — Filter: {facility_id or 'All Facilities'}", subtitle_style))
     elements.append(Spacer(1, 10))
 

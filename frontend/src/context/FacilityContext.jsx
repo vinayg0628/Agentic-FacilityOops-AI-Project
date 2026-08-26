@@ -7,7 +7,10 @@ export const FacilityProvider = ({ children }) => {
   const [facilities, setFacilities] = useState([]);
   const [selectedFacilityId, setSelectedFacilityId] = useState('ALL');
   const [searchQuery, setSearchQuery] = useState('');
-  const [theme, setTheme] = useState('dark');
+  const [theme, setTheme] = useState(() => {
+    const savedTheme = window.localStorage.getItem('facilityops-theme');
+    return savedTheme === 'light' || savedTheme === 'dark' ? savedTheme : 'dark';
+  });
   const [isIngestModalOpen, setIsIngestModalOpen] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
@@ -23,6 +26,7 @@ export const FacilityProvider = ({ children }) => {
       document.documentElement.classList.remove('dark');
       document.documentElement.classList.add('light');
     }
+    window.localStorage.setItem('facilityops-theme', theme);
   }, [theme]);
 
   const loadFacilities = async () => {

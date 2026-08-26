@@ -1,1 +1,1 @@
-"""Agentic FacilityOps AI Platform Application Package."""
+"""Agentic AI For Smart Facility Operations And Optimizations Application Package."""

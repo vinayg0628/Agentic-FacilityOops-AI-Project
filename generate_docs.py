@@ -1,5 +1,5 @@
 """
-Agentic FacilityOps AI Platform
+Agentic AI For Smart Facility Operations And Optimizations
 Project Documentation Generator — PDF
 Uses ReportLab to produce a professional, formatted PDF report.
 Run: python generate_docs.py
@@ -20,7 +20,7 @@ import os
 # ──────────────────────────────────────────────────────────
 # Output path
 # ──────────────────────────────────────────────────────────
-OUTPUT_PDF = os.path.join(os.path.dirname(__file__), "FacilityOps_AI_Platform_Documentation.pdf")
+OUTPUT_PDF = os.path.join(os.path.dirname(__file__), "Smart Facility Operations_AI_Platform_Documentation.pdf")
 
 # ──────────────────────────────────────────────────────────
 # Colour palette
@@ -99,7 +99,7 @@ def hdr_ftr(c, doc):
     w, h = A4
     c.setFillColor(DARK_BLUE);  c.rect(0, h-28, w, 28, fill=1, stroke=0)
     c.setFont("Helvetica-Bold", 9); c.setFillColor(CYAN)
-    c.drawString(1.2*cm, h-18, "Agentic FacilityOps AI Platform")
+    c.drawString(1.2*cm, h-18, "Agentic AI For Smart Facility Operations And Optimizations")
     c.setFillColor(WHITE); c.setFont("Helvetica", 8)
     c.drawRightString(w-1.2*cm, h-18, "Energy Intelligence & Monitoring — Documentation")
     c.setFillColor(DARK_BLUE); c.rect(0, 0, w, 22, fill=1, stroke=0)
@@ -113,7 +113,7 @@ def hdr_ftr(c, doc):
 def cover(story):
     story.append(sp(60))
     cd = [
-        [Paragraph("Agentic FacilityOps AI Platform",
+        [Paragraph("Agentic AI For Smart Facility Operations And Optimizations",
             S("ct", fontName="Helvetica-Bold", fontSize=22, textColor=DARK_BLUE,
               alignment=TA_CENTER, spaceAfter=4, leading=28))],
         [Paragraph("Energy Intelligence &amp; Monitoring",
@@ -178,7 +178,7 @@ def toc(story):
 def s1_overview(story):
     story.append(sec("1. Project Overview & Objectives"))
     story.append(body(
-        "<b>Agentic FacilityOps AI Platform</b> is a production-grade, enterprise-level AI-powered "
+        "<b>Agentic AI For Smart Facility Operations And Optimizations</b> is a production-grade, enterprise-level AI-powered "
         "Energy Intelligence and Monitoring system for commercial buildings such as IT Parks, Hospitals, "
         "Universities, Shopping Malls, and Factories. The platform collects energy consumption data from "
         "IoT sensors (simulated via CSV files), analyses energy usage using Python data science tools, "
@@ -677,7 +677,7 @@ def s16_roadmap(story):
     story.append(sp(12))
     story.append(HRFlowable(width="100%", thickness=1.5, color=CYAN, spaceAfter=8))
     story.append(body(
-        "<b>End of Documentation</b>  —  Agentic FacilityOps AI Platform v1.0  |  Energy Intelligence & Monitoring"
+        "<b>End of Documentation</b>  —  Agentic AI For Smart Facility Operations And Optimizations v1.0  |  Energy Intelligence & Monitoring"
     ))
     story.append(body(f"Document generated: {datetime.datetime.now().strftime('%d %B %Y, %I:%M %p')}"))
 
@@ -689,7 +689,7 @@ def build():
         OUTPUT_PDF, pagesize=A4,
         leftMargin=1.8*cm, rightMargin=1.8*cm,
         topMargin=2.2*cm, bottomMargin=2.0*cm,
-        title="Agentic FacilityOps AI Platform Documentation",
+        title="Agentic AI For Smart Facility Operations And Optimizations Documentation",
         author="G Vinay Kumar",
         subject="Energy Intelligence & Monitoring — Technical Documentation",
     )

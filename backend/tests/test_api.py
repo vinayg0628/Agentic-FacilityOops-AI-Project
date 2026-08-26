@@ -8,7 +8,7 @@ from app.main import app
 
 class TestAPIImports(unittest.TestCase):
     def test_fastapi_app_initialization(self):
-        self.assertEqual(app.title, "Agentic FacilityOps AI Platform")
+        self.assertEqual(app.title, "Agentic AI For Smart Facility Operations And Optimizations")
         self.assertTrue(len(app.routes) > 0)
 
 if __name__ == '__main__':

@@ -158,7 +158,7 @@ export const Navbar = ({ activeAlertsCount = 0 }) => {
             </div>
             <div>
               <h1 className="text-lg font-bold bg-gradient-to-r from-slate-100 via-cyan-200 to-blue-400 bg-clip-text text-transparent leading-none">
-                FacilityOps <span className="text-cyan-400 text-xs font-semibold px-2 py-0.5 rounded-full bg-cyan-950/80 border border-cyan-800 ml-1">AI Energy</span>
+                Smart FacilityOps <span className="text-cyan-400 text-xs font-semibold px-2 py-0.5 rounded-full bg-cyan-950/80 border border-cyan-800 ml-1">AI Energy</span>
               </h1>
               <p className="text-xs text-slate-400 mt-0.5 flex items-center gap-1.5 font-medium">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
@@ -327,7 +327,7 @@ export const Navbar = ({ activeAlertsCount = 0 }) => {
           {/* Theme Toggle */}
           <button
             onClick={toggleTheme}
-            className="p-2 rounded-xl bg-slate-800/60 border border-slate-700/60 text-slate-300 hover:text-cyan-400 transition-all cursor-pointer"
+            className="theme-toggle p-2 rounded-xl bg-slate-800/60 border border-slate-700/60 text-slate-300 hover:text-cyan-400 transition-all cursor-pointer"
             title="Toggle Light/Dark Theme"
           >
             {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-700" />}

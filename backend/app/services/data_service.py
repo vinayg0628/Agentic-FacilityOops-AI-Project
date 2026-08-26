@@ -2,14 +2,23 @@ import os
 import pandas as pd
 import numpy as np
 import datetime
+import uuid
 from sqlalchemy.orm import Session
 from app.models.facility import Facility
 from app.models.energy import EnergyUsage
 from app.models.alert import EnergyAlert
 
+# Zone, Visitor, FacilityEvent, SystemAlert models removed from here.
+# Proper models now live in:
+#   app/models/security_models.py  (Visitor, AccessLog, CCTVEvent, SecurityIncident, SecurityAlert)
+#   app/models/occupancy_models.py (Room, OccupancyReading, OccupancyPrediction)
+
 DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "data")
 FACILITIES_CSV = os.path.join(DATA_DIR, "sample_facilities.csv")
 ENERGY_CSV = os.path.join(DATA_DIR, "sample_energy_data.csv")
+ZONES_CSV = os.path.join(DATA_DIR, "sample_zones.csv")
+VISITORS_CSV = os.path.join(DATA_DIR, "sample_visitors.csv")
+EVENTS_CSV = os.path.join(DATA_DIR, "sample_events_data.csv")
 
 FACILITY_DEFS = [
     {
@@ -66,7 +75,77 @@ FACILITY_DEFS = [
 
 def generate_sample_csv_data():
     os.makedirs(DATA_DIR, exist_ok=True)
-    
+
+    # 3. Generate Zones, Visitors, Events if missing
+    import random
+    import datetime
+    now = datetime.datetime.now()
+    start_time = now - datetime.timedelta(days=30)
+    if not os.path.exists(EVENTS_CSV):
+        zones = []
+        for fac in FACILITY_DEFS:
+            for i in range(3):
+                zones.append({
+                    "zone_id": f"{fac['facility_id']}-Z{i+1}",
+                    "zone_name": f"Zone {i+1}",
+                    "zone_type": random.choice(["office", "meeting_room", "common_area", "parking"]),
+                    "capacity": random.randint(20, 100),
+                    "facility_id": fac['facility_id']
+                })
+        pd.DataFrame(zones).to_csv(ZONES_CSV, index=False)
+        
+        visitors = []
+        for i in range(10):
+            visitors.append({
+                "visitor_id": f"V-{i+1}",
+                "name": f"Visitor {i+1}",
+                "host_employee_id": f"E-{random.randint(1, 50)}",
+                "allowed_zones": '["' + random.choice(zones)['zone_id'] + '"]',
+                "check_in": start_time.strftime("%Y-%m-%d %H:%M:%S"),
+                "check_out": None
+            })
+        pd.DataFrame(visitors).to_csv(VISITORS_CSV, index=False)
+        
+        events = []
+        curr = start_time
+        np.random.seed(43)
+        while curr <= now:
+            hour = curr.hour
+            is_weekend = curr.weekday() >= 5
+            
+            num_events = 0
+            if not is_weekend and 8 <= hour <= 18:
+                num_events = random.randint(5, 20)
+            else:
+                num_events = random.randint(0, 3)
+                
+            for _ in range(num_events):
+                zone = random.choice(zones)
+                is_anomaly = (np.random.random() < 0.05)
+                entity_type = "employee" if random.random() > 0.1 else "visitor"
+                entity_id = f"E-{random.randint(1, 50)}" if entity_type == "employee" else f"V-{random.randint(1, 10)}"
+                event_type = random.choice(["badge_swipe", "motion"])
+                access_granted = True
+                
+                if event_type == "badge_swipe":
+                    if is_anomaly:
+                        access_granted = False
+                else:
+                    access_granted = None
+                
+                events.append({
+                    "zone_id": zone["zone_id"],
+                    "entity_id": entity_id,
+                    "entity_type": entity_type,
+                    "event_type": event_type,
+                    "access_granted": access_granted,
+                    "timestamp": curr.strftime("%Y-%m-%d %H:%M:%S")
+                })
+            
+            curr += datetime.timedelta(minutes=15)
+            
+        pd.DataFrame(events).to_csv(EVENTS_CSV, index=False)
+
     # 1. Generate Facilities CSV if missing
     if not os.path.exists(FACILITIES_CSV):
         df_fac = pd.DataFrame([
@@ -183,3 +262,7 @@ def seed_database_from_csv(db: Session):
             ))
         db.bulk_save_objects(records)
         db.commit()
+
+    # NOTE: Zone, Visitor, and FacilityEvent CSV seeding removed.
+    # Occupancy and Security data is now seeded by seed_occupancy_security_data() in main.py startup.
+

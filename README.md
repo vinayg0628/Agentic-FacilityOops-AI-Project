@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🏢 Agentic FacilityOps AI Platform
+# 🏢 Agentic AI For Smart Facility Operations And Optimizations
 
 <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=22&pause=1000&color=00D9FF&center=true&vCenter=true&width=600&lines=Enterprise+AI+Facility+Management;Real-time+IoT+Sensor+Analytics;Predictive+Maintenance+Engine;Multi-Agent+AI+Architecture" alt="Typing SVG" />
 
@@ -36,7 +36,7 @@
 
 ## 📋 Overview
 
-The **Agentic FacilityOps AI Platform** is a full-stack, production-ready enterprise application that uses **multi-agent AI** to continuously monitor, analyze, and optimize facility operations across energy, maintenance, occupancy, security, and cost domains.
+The **Agentic AI For Smart Facility Operations And Optimizations** is a full-stack, production-ready enterprise application that uses **multi-agent AI** to continuously monitor, analyze, and optimize facility operations across energy, maintenance, occupancy, security, and cost domains.
 
 Built for **facility managers, engineers, and technicians** who need real-time visibility into their assets — from energy consumption spikes to equipment failure predictions.
 
@@ -127,7 +127,7 @@ Built for **facility managers, engineers, and technicians** who need real-time v
 ### 📁 Project Structure
 
 ```
-Agentic-FacilityOps-AI-Platform/
+Agentic-Smart Facility Operations-AI-Platform/
 │
 ├── 📂 backend/
 │   ├── 📂 app/
@@ -543,9 +543,12 @@ VITE_API_URL=http://localhost:8000/api
 
 ## 🗺️ Roadmap
 
-### ✅ Completed
+### 🚀 Completed
 - [x] **Milestone 1** — Energy Intelligence Agent + Dashboard
 - [x] **Milestone 2** — Predictive Maintenance System (11-rule AI engine)
+- [x] **Milestone 3** — Occupancy Management & Security Modules (Multi-Agent Architecture)
+- [x] **Settings Tab UI** — Expanded Rule Engine settings for all 5 AI Agents
+- [x] Platform Rebranding to Agentic AI For Smart Facility Operations And Optimizations
 - [x] JWT Authentication with Role-Based Access Control
 - [x] PostgreSQL + Redis Docker Compose deployment
 - [x] Global search (pages + equipment real-time results)
@@ -553,16 +556,13 @@ VITE_API_URL=http://localhost:8000/api
 - [x] Auto seed data (50 assets, 36,000 sensor records)
 - [x] PDF/Excel report generation
 
-### 🔜 Coming Next
-- [ ] **Milestone 3** — Occupancy Management Module
-- [ ] **Milestone 4** — Security & Access Control Module
-- [ ] **Milestone 5** — Cost Optimization Agent
+### 🏗️ Coming Next
+- [ ] **Milestone 4** — Cost Optimization Agent (Dynamic Tariffs)
 - [ ] ML-based failure prediction (XGBoost / LightGBM)
 - [ ] WebSocket real-time live updates
 - [ ] GitHub Actions CI/CD pipeline
 - [ ] Kubernetes (K8s) deployment manifests
 - [ ] Mobile App (React Native)
-- [ ] Email/SMS alert notifications
 
 ---
 

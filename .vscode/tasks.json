@@ -38,7 +38,7 @@
       }
     },
     {
-      "label": "Run Entire FacilityOps AI Platform",
+      "label": "Run Entire Agentic AI For Smart Facility Operations And Optimizations",
       "dependsOn": [
         "Run FastAPI Backend",
         "Run React Frontend"

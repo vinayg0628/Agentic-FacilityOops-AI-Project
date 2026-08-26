@@ -1,1 +1,1 @@
-"""API package for Agentic FacilityOps AI Platform."""
+"""API package for Agentic AI For Smart Facility Operations And Optimizations."""

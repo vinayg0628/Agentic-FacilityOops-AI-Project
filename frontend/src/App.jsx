@@ -18,12 +18,19 @@ import { HealthScoresPage } from './pages/maintenance/HealthScoresPage';
 import { PredictionsPage } from './pages/maintenance/PredictionsPage';
 import { SchedulePage } from './pages/maintenance/SchedulePage';
 import { AlertsManagementPage } from './pages/maintenance/AlertsManagementPage';
+import { OccupancyPage } from './pages/occupancy/OccupancyPage';
+import { OccupancyAnalyticsPage } from './pages/occupancy/OccupancyAnalyticsPage';
+import { OccupancyHeatmapPage } from './pages/occupancy/OccupancyHeatmapPage';
+import { SecurityPage } from './pages/security/SecurityPage';
+import { SecurityAlertsPage } from './pages/security/SecurityAlertsPage';
+import { IncidentPage } from './pages/security/IncidentPage';
+import { IncidentDetailPage } from './pages/security/IncidentDetailPage';
 
 export function App() {
   return (
     <FacilityProvider>
       <Router>
-        <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100 antialiased">
+        <div className="min-h-screen flex flex-col bg-[var(--bg-main)] text-[var(--text-primary)] antialiased">
           
           {/* Top Navigation Bar */}
           <Navbar activeAlertsCount={3} />
@@ -47,6 +54,13 @@ export function App() {
                 <Route path="/maintenance/predictions" element={<PredictionsPage />} />
                 <Route path="/maintenance/schedule" element={<SchedulePage />} />
                 <Route path="/maintenance/alerts" element={<AlertsManagementPage />} />
+                <Route path="/occupancy" element={<OccupancyPage />} />
+                <Route path="/occupancy/analytics" element={<OccupancyAnalyticsPage />} />
+                <Route path="/occupancy/heatmap" element={<OccupancyHeatmapPage />} />
+                <Route path="/security" element={<SecurityPage />} />
+                <Route path="/security/alerts" element={<SecurityAlertsPage />} />
+                <Route path="/security/incidents" element={<IncidentPage />} />
+                <Route path="/security/incidents/:id" element={<IncidentDetailPage />} />
               </Routes>
             </main>
           </div>

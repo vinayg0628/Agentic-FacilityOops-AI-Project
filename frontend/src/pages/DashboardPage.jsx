@@ -69,10 +69,10 @@ export const DashboardPage = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="dashboard-page space-y-6">
       
       {/* Executive Welcome & AI Status Banner */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 rounded-2xl bg-gradient-to-r from-cyan-950/40 via-slate-900/60 to-blue-950/40 border border-cyan-500/20 shadow-2xl relative overflow-hidden">
+      <div className="dashboard-banner flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 rounded-2xl bg-gradient-to-r from-cyan-950/40 via-slate-900/60 to-blue-950/40 border border-cyan-500/20 shadow-2xl relative overflow-hidden">
         <div className="absolute top-0 right-0 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none"></div>
         <div>
           <div className="flex items-center gap-2 mb-1">
@@ -92,7 +92,7 @@ export const DashboardPage = () => {
         <div className="flex items-center gap-3">
           <button
             onClick={loadDashboardData}
-            className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 text-xs font-medium border border-slate-700 transition-all cursor-pointer"
+            className="dashboard-refresh flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 text-xs font-medium border border-slate-700 transition-all cursor-pointer"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
             <span>Refresh Grid</span>
@@ -206,7 +206,7 @@ export const DashboardPage = () => {
         >
           <div className="overflow-x-auto">
             <table className="w-full text-xs text-left">
-              <thead className="text-[11px] uppercase text-slate-400 bg-slate-900/60 border-b border-slate-800">
+              <thead className="dashboard-table-head text-[11px] uppercase text-slate-400 bg-slate-900/60 border-b border-slate-800">
                 <tr>
                   <th className="py-2.5 px-3">Severity</th>
                   <th className="py-2.5 px-3">Facility</th>
@@ -214,9 +214,9 @@ export const DashboardPage = () => {
                   <th className="py-2.5 px-3">Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/60 text-slate-300">
+              <tbody className="dashboard-table-body divide-y divide-slate-800/60 text-slate-300">
                 {alerts.slice(0, 5).map((a) => (
-                  <tr key={a.alert_id} className="hover:bg-slate-800/30 transition-colors">
+                  <tr key={a.alert_id} className="dashboard-table-row hover:bg-slate-800/30 transition-colors">
                     <td className="py-2.5 px-3">
                       <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
                         a.severity === 'Critical' ? 'bg-rose-500/20 text-rose-400 border border-rose-500/40' :
@@ -229,7 +229,7 @@ export const DashboardPage = () => {
                     <td className="py-2.5 px-3 font-medium text-slate-200">{a.facility_name || a.facility_id}</td>
                     <td className="py-2.5 px-3">{a.alert_type}</td>
                     <td className="py-2.5 px-3">
-                      <span className="text-slate-400 bg-slate-800 px-2 py-0.5 rounded text-[10px]">{a.status}</span>
+                      <span className="dashboard-status text-slate-400 bg-slate-800 px-2 py-0.5 rounded text-[10px]">{a.status}</span>
                     </td>
                   </tr>
                 ))}
@@ -255,7 +255,7 @@ export const DashboardPage = () => {
         >
           <div className="space-y-3">
             {recommendations.slice(0, 3).map((rec) => (
-              <div key={rec.id} className="p-3 rounded-xl bg-slate-900/60 border border-slate-800/80 hover:border-cyan-500/30 transition-all flex flex-col gap-1.5">
+              <div key={rec.id} className="dashboard-recommendation p-3 rounded-xl bg-slate-900/60 border border-slate-800/80 hover:border-cyan-500/30 transition-all flex flex-col gap-1.5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Lightbulb className="w-4 h-4 text-amber-400 shrink-0" />

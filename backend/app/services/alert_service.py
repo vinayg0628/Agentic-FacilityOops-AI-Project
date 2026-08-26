@@ -1,7 +1,7 @@
 import logging
 from typing import Dict, Any, List
 from sqlalchemy.orm import Session
-from app.models.alert import Alert, AlertSeverity, AlertStatus
+from app.models.alert import EnergyAlert
 
 logger = logging.getLogger("facilityops.alert_service")
 
@@ -16,12 +16,12 @@ class AlertService:
         
         # Power threshold check (> 380 kW)
         if power_kw > 380.0:
-            alert = Alert(
+            alert = EnergyAlert(
                 facility_id=facility_id,
                 title="Critical Power Spike Detected",
                 description=f"Power demand reached {power_kw} kW, exceeding 380 kW threshold.",
-                severity=AlertSeverity.CRITICAL,
-                status=AlertStatus.OPEN,
+                severity='Critical',
+                status='Open',
                 metric_name="power_kw",
                 metric_value=power_kw,
                 threshold_value=380.0
@@ -31,12 +31,12 @@ class AlertService:
 
         # Temperature threshold check (> 78°F)
         if temperature > 78.0:
-            alert = Alert(
+            alert = EnergyAlert(
                 facility_id=facility_id,
                 title="HVAC Temperature Excursion",
                 description=f"Space temperature reached {temperature}°F, exceeding 78°F limit.",
-                severity=AlertSeverity.HIGH,
-                status=AlertStatus.OPEN,
+                severity='High',
+                status='Open',
                 metric_name="temperature",
                 metric_value=temperature,
                 threshold_value=78.0
@@ -49,3 +49,19 @@ class AlertService:
             logger.info(f"Generated {len(new_alerts)} new automated telemetry alerts for Facility {facility_id}.")
 
         return new_alerts
+
+from app.utils.email_utils import send_alert_notification_email
+
+def create_system_alert(db, zone_id, alert_type, severity, message):
+    from app.services.data_service import SystemAlert
+    alert = SystemAlert(
+        zone_id=zone_id,
+        alert_type=alert_type,
+        severity=severity,
+        message=message,
+        status="Open"
+    )
+    db.add(alert)
+    db.commit()
+    logger.info(f"Generated {alert_type} alert for zone {zone_id}: {message}")
+    send_alert_notification_email("admin@facilityops.com", f"{severity} {alert_type} Alert", message)

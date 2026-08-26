@@ -29,6 +29,12 @@
     overflow-x: hidden;
     transition: background-color 0.25s ease, color 0.25s ease;
   }
+
+  .dark body,
+  .light body {
+    background-color: var(--bg-main) !important;
+    color: var(--text-primary);
+  }
 }
 
 /* Glassmorphism Cards */
@@ -126,6 +132,111 @@
 .light aside {
   background-color: #ffffff !important;
   border-right-color: #e2e8f0 !important;
+}
+
+.light aside nav {
+  background-color: #f1f5f9 !important;
+  border-top-color: #e2e8f0 !important;
+}
+
+.light aside nav a {
+  color: #475569;
+}
+
+.light aside nav a:hover {
+  background-color: #e2e8f0;
+  color: #0f172a;
+}
+
+.light .sidebar button[class*="bg-slate-800\/50"] {
+  background-color: #e2e8f0;
+}
+
+.light .sidebar button[class*="from-cyan-900"],
+.light .sidebar button[class*="from-violet-900"],
+.light .sidebar button[class*="from-emerald-900"],
+.light .sidebar button[class*="from-red-900"] {
+  background: #e0f2fe;
+}
+
+.light .sidebar-settings-link {
+  background-color: #e2e8f0;
+  border-color: #cbd5e1;
+  color: #334155;
+}
+
+.light .sidebar-engine {
+  background: linear-gradient(135deg, #ecfeff, #eff6ff);
+  border-color: #a5f3fc;
+}
+
+.light .sidebar-engine .text-slate-200 {
+  color: #0f172a !important;
+}
+
+.light .sidebar-engine-core {
+  background-color: #ffffff;
+  border-color: #cbd5e1;
+  color: #475569;
+}
+
+.light .sidebar > div:last-child {
+  border-top-color: #e2e8f0;
+}
+
+.light .sidebar > div:last-child .bg-slate-800 {
+  background-color: #e2e8f0;
+  color: #475569;
+}
+
+.light .theme-toggle {
+  background-color: #ffffff;
+  border-color: #cbd5e1;
+  color: #475569;
+}
+
+.light .theme-toggle:hover {
+  color: #0284c7;
+  background-color: #f1f5f9;
+}
+
+.light .dashboard-banner {
+  background: linear-gradient(100deg, #ecfeff 0%, #f8fafc 52%, #eff6ff 100%);
+  border-color: #bae6fd;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+}
+
+.light .dashboard-refresh {
+  background-color: #ffffff;
+  border-color: #cbd5e1;
+  color: #334155;
+}
+
+.light .dashboard-refresh:hover {
+  background-color: #f1f5f9;
+}
+
+.light .dashboard-table-head {
+  background-color: #f1f5f9;
+  border-bottom-color: #e2e8f0;
+}
+
+.light .dashboard-table-body {
+  color: #334155;
+}
+
+.light .dashboard-table-row:hover {
+  background-color: #f8fafc;
+}
+
+.light .dashboard-status {
+  background-color: #e2e8f0;
+  color: #475569;
+}
+
+.light .dashboard-recommendation {
+  background-color: #f8fafc;
+  border-color: #e2e8f0;
 }
 
 /* Custom Scrollbar */

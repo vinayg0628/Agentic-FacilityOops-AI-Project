@@ -3,7 +3,7 @@ from pydantic_settings import BaseSettings
 from typing import List, Optional
 
 class Settings(BaseSettings):
-    PROJECT_NAME: str = "Agentic FacilityOps AI Platform"
+    PROJECT_NAME: str = "Agentic AI For Smart Facility Operations And Optimizations"
     API_V1_STR: str = "/api"
     ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")
     DEBUG: bool = os.getenv("DEBUG", "true").lower() == "true"

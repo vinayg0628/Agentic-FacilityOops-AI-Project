@@ -1,5 +1,5 @@
 # ─────────────────────────────────────────────────────────
-#  Agentic FacilityOps AI Platform — Backend Dependencies
+#  Agentic AI For Smart Facility Operations And Optimizations — Backend Dependencies
 # ─────────────────────────────────────────────────────────
 
 # ── Web Framework ─────────────────────────────────────────

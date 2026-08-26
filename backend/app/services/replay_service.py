@@ -1,7 +1,7 @@
 """
 replay_service.py
 ─────────────────────────────────────────────────────────────────────────────
-Live-replay engine for the Agentic FacilityOps AI Platform.
+Live-replay engine for the Agentic AI For Smart Facility Operations And Optimizations.
 
 Reads the static energy CSV row-by-row and inserts each record into the
 energy_usage table on a configurable timer, simulating a live IoT stream
@@ -32,7 +32,7 @@ import time
 from app.core.config import settings
 from app.core.database import SessionLocal
 from app.models.energy import EnergyUsage
-from app.services.data_service import ENERGY_CSV, generate_sample_csv_data
+from app.services.data_service import ENERGY_CSV, EVENTS_CSV, generate_sample_csv_data, FacilityEvent
 
 logger = logging.getLogger("facilityops.replay")
 
@@ -41,6 +41,23 @@ _replay_thread: threading.Thread | None = None
 
 
 # ── Helper ────────────────────────────────────────────────────────────────────
+
+
+def _parse_event_row(row: dict) -> FacilityEvent | None:
+    try:
+        val = row.get("access_granted", "")
+        ag = None if val == "" else (val.lower() == "true")
+        return FacilityEvent(
+            zone_id=str(row["zone_id"]).strip(),
+            entity_id=str(row["entity_id"]).strip(),
+            entity_type=str(row["entity_type"]).strip(),
+            event_type=str(row["event_type"]).strip(),
+            access_granted=ag,
+            timestamp=datetime.datetime.now().replace(microsecond=0)
+        )
+    except Exception as exc:
+        logger.warning("Replay: skipping malformed event row — %s", exc)
+        return None
 
 def _parse_row(row: dict) -> EnergyUsage | None:
     """Convert a CSV row dict into an EnergyUsage ORM object.
@@ -106,15 +123,17 @@ def _replay_loop() -> None:
     while True:
         # ── Open (or re-open) the CSV for one full pass ───────────────────────
         try:
-            csv_file = open(ENERGY_CSV, newline="", encoding="utf-8")
+            energy_csv_file = open(ENERGY_CSV, newline="", encoding="utf-8")
+            events_csv_file = open(EVENTS_CSV, newline="", encoding="utf-8")
         except FileNotFoundError:
-            logger.error("Replay: CSV not found at %s — aborting replay.", ENERGY_CSV)
+            logger.error("Replay: CSVs not found — aborting replay.")
             return
 
-        with csv_file:
-            reader = csv.DictReader(csv_file)
+        with energy_csv_file, events_csv_file:
+            energy_reader = csv.DictReader(energy_csv_file)
+            events_reader = csv.DictReader(events_csv_file)
 
-            for row in reader:
+            for energy_row, event_row in zip(energy_reader, events_reader):
                 # ── Duration guard (checked before every insert) ──────────────
                 if duration_seconds is not None:
                     elapsed = time.monotonic() - session_start
@@ -128,22 +147,28 @@ def _replay_loop() -> None:
                         )
                         return  # clean stop — thread exits
 
-                # ── Build and persist the ORM record ─────────────────────────
-                record = _parse_row(row)
-                if record is None:
-                    continue  # skip bad rows, do not sleep
+                # ── Build and persist the ORM records ────────────────────────
+                energy_record = _parse_row(energy_row)
+                event_record = _parse_event_row(event_row)
+
+                if energy_record is None and event_record is None:
+                    continue
 
                 db = SessionLocal()
                 try:
-                    db.add(record)
+                    if energy_record:
+                        db.add(energy_record)
+                    if event_record:
+                        db.add(event_record)
                     db.commit()
                     rows_inserted += 1
-                    logger.debug(
-                        "Replay insert #%d | facility=%s | ts=%s",
-                        rows_inserted,
-                        record.facility_id,
-                        record.timestamp,
-                    )
+                    if energy_record:
+                        logger.debug(
+                            "Replay insert #%d | facility=%s | ts=%s",
+                            rows_inserted,
+                            energy_record.facility_id,
+                            energy_record.timestamp,
+                        )
                 except Exception as exc:
                     db.rollback()
                     logger.error("Replay: DB insert failed — %s", exc)
