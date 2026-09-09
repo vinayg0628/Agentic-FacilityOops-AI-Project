@@ -98,6 +98,26 @@ services:
     networks:
       - facilityops_net
 
+  # ── Celery Worker ──────────────────────────────────────────────────────────
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: facilityops_worker
+    restart: unless-stopped
+    command: ["celery", "-A", "app.workers.report_worker.celery_app", "worker", "--loglevel=info"]
+    environment:
+      ENVIRONMENT:                    production
+      DATABASE_URL:                   postgresql://${POSTGRES_USER:-facilityops_user}:${POSTGRES_PASSWORD:-facilityops_pass}@postgres:5432/${POSTGRES_DB:-facilityops_db}
+      REDIS_URL:                      redis://:${REDIS_PASSWORD:-redis_pass}@redis:6379/0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - facilityops_net
+
 # ── Volumes ────────────────────────────────────────────────────────────────────
 volumes:
   postgres_data:

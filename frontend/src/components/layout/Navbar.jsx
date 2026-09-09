@@ -23,15 +23,20 @@ import {
   BarChart2,
   LayoutDashboard,
   X,
-  ArrowRight
+  ArrowRight,
+  Globe
 } from 'lucide-react';
-import { fetchEquipmentList } from '../../services/maintenanceApi';
+import { fetchEquipmentList, fetchMaintenanceAlerts } from '../../services/maintenanceApi';
+import { fetchAlerts } from '../../services/api';
+import { fetchActiveAlerts as fetchOccupancyAlerts } from '../../services/occupancyService';
+import { fetchSecurityAlerts } from '../../services/securityService';
 
 // ──────────────────────────────────────────────
 // Static page shortcuts (always available)
 // ──────────────────────────────────────────────
 const PAGE_SHORTCUTS = [
-  { label: 'Dashboard',          path: '/',                        icon: LayoutDashboard,  category: 'Pages' },
+  { label: 'Dashboard',          path: '/dashboard',               icon: LayoutDashboard,  category: 'Pages' },
+  { label: 'Landing Page',       path: '/landing',                 icon: Globe,            category: 'Pages' },
   { label: 'Energy Monitoring',  path: '/energy',                  icon: Zap,              category: 'Pages' },
   { label: 'Analytics',          path: '/analytics',               icon: BarChart3,        category: 'Pages' },
   { label: 'Alerts',             path: '/alerts',                  icon: AlertTriangle,    category: 'Pages' },
@@ -46,7 +51,7 @@ const PAGE_SHORTCUTS = [
   { label: 'PM Alerts',          path: '/maintenance/alerts',      icon: BellDot,          category: 'Maintenance' },
 ];
 
-export const Navbar = ({ activeAlertsCount = 0 }) => {
+export const Navbar = () => {
   const navigate = useNavigate();
   const {
     facilities,
@@ -55,8 +60,7 @@ export const Navbar = ({ activeAlertsCount = 0 }) => {
     searchQuery,
     setSearchQuery,
     theme,
-    toggleTheme,
-    setIsIngestModalOpen
+    toggleTheme
   } = useFacility();
 
   const [showNotifications, setShowNotifications] = useState(false);
@@ -64,6 +68,8 @@ export const Navbar = ({ activeAlertsCount = 0 }) => {
   const [localSearch, setLocalSearch]             = useState('');
   const [equipment, setEquipment]                 = useState([]);
   const [results, setResults]                     = useState([]);
+  const [allAlerts, setAllAlerts]                 = useState([]);
+  const [activeAlertsCount, setActiveAlertsCount] = useState(0);
 
   const searchRef = useRef(null);
   const inputRef  = useRef(null);
@@ -72,6 +78,39 @@ export const Navbar = ({ activeAlertsCount = 0 }) => {
   useEffect(() => {
     fetchEquipmentList().then(data => setEquipment(data)).catch(() => {});
   }, []);
+
+  // Load alerts from all agents
+  useEffect(() => {
+    const loadAllAlerts = async () => {
+      try {
+        const [energy, maint, occ, sec] = await Promise.all([
+          fetchAlerts(selectedFacilityId, 'ALL', 'Open').catch(() => []),
+          fetchMaintenanceAlerts(null, 'ALL', 'Open').catch(() => []),
+          fetchOccupancyAlerts(selectedFacilityId).catch(() => []),
+          fetchSecurityAlerts(selectedFacilityId, 'Open', 'ALL').catch(() => [])
+        ]);
+
+        const combined = [
+          ...(energy || []).map(a => ({ ...a, source: 'Energy Agent' })),
+          ...(maint || []).map(a => ({ ...a, source: 'Maintenance Agent' })),
+          ...(occ || []).map(a => ({ ...a, source: 'Occupancy Agent' })),
+          ...(sec || []).map(a => ({ ...a, source: 'Security Agent' }))
+        ];
+        
+        // Sort by timestamp descending
+        combined.sort((a, b) => new Date(b.timestamp || b.created_at || 0) - new Date(a.timestamp || a.created_at || 0));
+        
+        setAllAlerts(combined);
+        setActiveAlertsCount(combined.length);
+      } catch (err) {
+        console.error('Failed to load combined alerts', err);
+      }
+    };
+
+    loadAllAlerts();
+    const interval = setInterval(loadAllAlerts, 30000);
+    return () => clearInterval(interval);
+  }, [selectedFacilityId]);
 
   // Focus input when dropdown opens
   useEffect(() => {
@@ -151,7 +190,7 @@ export const Navbar = ({ activeAlertsCount = 0 }) => {
       <div className="flex items-center justify-between gap-4">
 
         {/* Brand / Logo & Live System Status */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 cursor-pointer" onClick={() => navigate('/dashboard')}>
           <div className="flex items-center gap-2.5">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-600 to-blue-600 flex items-center justify-center text-white shadow-lg shadow-cyan-500/20">
               <Layers className="w-6 h-6 animate-pulse" />
@@ -315,13 +354,14 @@ export const Navbar = ({ activeAlertsCount = 0 }) => {
         {/* Right Actions */}
         <div className="flex items-center gap-3">
 
-          {/* Manual Telemetry Ingest Button */}
+          {/* Landing Page Link */}
           <button
-            onClick={() => setIsIngestModalOpen(true)}
-            className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 shadow-lg shadow-cyan-500/25 transition-all transform active:scale-95 cursor-pointer"
+            onClick={() => navigate('/landing')}
+            className="p-2 px-3 rounded-xl bg-slate-800/60 border border-slate-700/60 text-slate-300 hover:text-cyan-400 hover:border-cyan-500/40 transition-all cursor-pointer flex items-center gap-1.5 text-xs font-medium"
+            title="View Public Landing Page"
           >
-            <PlusCircle className="w-4 h-4" />
-            <span className="hidden sm:inline">Ingest Telemetry</span>
+            <Globe className="w-4 h-4 text-cyan-400" />
+            <span className="hidden md:inline">Public Site</span>
           </button>
 
           {/* Theme Toggle */}
@@ -351,19 +391,36 @@ export const Navbar = ({ activeAlertsCount = 0 }) => {
             {showNotifications && (
               <div className="absolute right-0 mt-2 w-80 rounded-2xl glass-panel p-4 z-50 border border-slate-700 shadow-2xl text-xs bg-slate-900">
                 <div className="flex items-center justify-between border-b border-slate-700 pb-2 mb-3">
-                  <span className="font-semibold text-slate-200">Active Energy Alerts</span>
+                  <span className="font-semibold text-slate-200">Active Alerts</span>
                   <span className="px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-400 font-mono text-[10px] font-bold">
                     {activeAlertsCount} Unresolved
                   </span>
                 </div>
                 <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
-                  {activeAlertsCount > 0 ? (
-                    <div className="p-2.5 rounded-xl bg-rose-950/40 border border-rose-800/50 text-rose-200">
-                      <p className="font-semibold text-xs">Critical HVAC Spike Detected</p>
-                      <p className="text-[11px] text-rose-300/80 mt-1">CyberTech IT Park load exceeded 28% threshold.</p>
-                    </div>
+                  {allAlerts.length > 0 ? (
+                    allAlerts.slice(0, 5).map((alert, idx) => (
+                      <div key={idx} className="p-2.5 rounded-xl bg-slate-800/40 border border-slate-700/50 hover:border-cyan-500/30 transition-colors">
+                        <div className="flex items-center justify-between mb-1">
+                           <span className={`text-[10px] font-bold uppercase tracking-wider ${
+                             alert.source === 'Energy Agent' ? 'text-cyan-400' : 
+                             alert.source === 'Maintenance Agent' ? 'text-violet-400' :
+                             alert.source === 'Occupancy Agent' ? 'text-amber-400' : 'text-blue-400'
+                           }`}>{alert.source}</span>
+                           <span className="text-[9px] text-slate-500">{new Date(alert.timestamp || alert.created_at).toLocaleTimeString()}</span>
+                        </div>
+                        <p className={`font-semibold text-xs ${alert.severity === 'Critical' ? 'text-rose-400' : 'text-slate-200'}`}>
+                          {alert.alert_type || alert.issue || alert.type || 'Alert'}
+                        </p>
+                        <p className="text-[11px] text-slate-400 mt-1 line-clamp-2">{alert.message || alert.description}</p>
+                      </div>
+                    ))
                   ) : (
-                    <p className="text-slate-400 text-center py-4">No active critical alerts.</p>
+                    <p className="text-slate-400 text-center py-4">No active alerts.</p>
+                  )}
+                  {allAlerts.length > 5 && (
+                    <div className="pt-2 text-center border-t border-slate-800 mt-2">
+                       <span className="text-[10px] text-cyan-400 font-medium">+{allAlerts.length - 5} more alerts...</span>
+                    </div>
                   )}
                 </div>
               </div>

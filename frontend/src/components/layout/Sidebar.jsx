@@ -22,6 +22,7 @@ import {
   Grid,
   Shield,
   AlertOctagon,
+  Globe
 } from 'lucide-react';
 
 // ── Agent definitions ─────────────────────────────────────────────────────────
@@ -39,9 +40,9 @@ const AGENTS = [
     badgeBg: 'bg-cyan-500/20',
     badgeText: 'text-cyan-300',
     badgeBorder: 'border-cyan-500/40',
-    rootPaths: ['/', '/energy', '/analytics', '/alerts', '/recommendations', '/reports', '/settings'],
+    rootPaths: ['/dashboard', '/energy', '/analytics', '/alerts', '/recommendations', '/reports', '/settings'],
     items: [
-      { path: '/',                name: 'Dashboard',        icon: LayoutDashboard },
+      { path: '/dashboard',       name: 'Dashboard',        icon: LayoutDashboard },
       { path: '/energy',          name: 'Energy Monitoring', icon: Zap },
       { path: '/analytics',       name: 'Analytics',         icon: BarChart3 },
       { path: '/alerts',          name: 'Alerts',            icon: AlertTriangle, badge: 'AI' },
@@ -110,6 +111,28 @@ const AGENTS = [
       { path: '/security', name: 'Security', icon: Shield },
       { path: '/security/alerts', name: 'Alerts', icon: AlertTriangle, badge: 'LIVE' },
       { path: '/security/incidents', name: 'Incidents', icon: AlertOctagon },
+    ],
+  },
+  {
+    id: 'cost',
+    label: 'Cost Optimization Agent',
+    accentFrom: 'from-amber-500/20',
+    accentTo: 'to-orange-500/20',
+    accentBorder: 'border-amber-500/30',
+    accentText: 'text-amber-400',
+    headerActiveBg: 'bg-gradient-to-r from-amber-900/50 to-orange-900/40',
+    headerInactiveBg: 'bg-slate-800/50',
+    dotActiveColor: 'bg-amber-400',
+    badgeBg: 'bg-amber-500/20',
+    badgeText: 'text-amber-300',
+    badgeBorder: 'border-amber-500/40',
+    rootPaths: ['/executive', '/cost', '/optimization', '/intelligence', '/facility-ai'],
+    items: [
+      { path: '/executive', name: 'Executive Dashboard', icon: BarChart3 },
+      { path: '/cost', name: 'Cost Analytics', icon: BarChart2 },
+      { path: '/optimization', name: 'Optimization Center', icon: Zap },
+      { path: '/intelligence', name: 'Cross-Agent Insights', icon: Lightbulb, badge: 'AI' },
+      { path: '/facility-ai', name: 'Ask Facility AI', icon: Cpu },
     ],
   },
 ];
@@ -219,10 +242,11 @@ export const Sidebar = () => {
 
   // Auto-open the section that owns the current route; energy open by default
   const [openSections, setOpenSections] = useState(() => ({
-    energy:      isAgentActive(AGENTS[0], pathname) || (!isAgentActive(AGENTS[1], pathname) && !isAgentActive(AGENTS[2], pathname) && !isAgentActive(AGENTS[3], pathname)),
+    energy:      isAgentActive(AGENTS[0], pathname) || (!isAgentActive(AGENTS[1], pathname) && !isAgentActive(AGENTS[2], pathname) && !isAgentActive(AGENTS[3], pathname) && !isAgentActive(AGENTS[4], pathname)),
     maintenance: isAgentActive(AGENTS[1], pathname),
     occupancy:   isAgentActive(AGENTS[2], pathname),
     security:    isAgentActive(AGENTS[3], pathname),
+    cost:        isAgentActive(AGENTS[4], pathname),
   }));
 
   const toggle = (id) =>
@@ -231,6 +255,7 @@ export const Sidebar = () => {
       maintenance: id === 'maintenance' ? !prev.maintenance : false,
       occupancy: id === 'occupancy' ? !prev.occupancy : false,
       security: id === 'security' ? !prev.security : false,
+      cost: id === 'cost' ? !prev.cost : false,
     }));
 
   return (
@@ -252,6 +277,28 @@ export const Sidebar = () => {
             onToggle={() => toggle(agent.id)}
           />
         ))}
+
+        <NavLink
+          to="/landing"
+          className={({ isActive }) =>
+            `flex items-center justify-between px-3.5 py-3 rounded-2xl border transition-all duration-200 ${
+              isActive
+                ? 'bg-gradient-to-r from-cyan-900/60 to-blue-900/50 border-cyan-500/40 text-cyan-200 shadow-sm'
+                : 'sidebar-settings-link bg-slate-800/50 border-slate-800/60 text-slate-300 hover:text-slate-100 hover:bg-slate-800/80'
+            }`
+          }
+        >
+          {({ isActive }) => (
+            <>
+              <div className="flex items-center gap-2.5">
+                <span className={`w-2 h-2 rounded-full shrink-0 ${isActive ? 'bg-cyan-400 animate-ping' : 'bg-cyan-500/60'}`} />
+                <Globe className={`w-3.5 h-3.5 ${isActive ? 'text-cyan-300' : 'text-cyan-400'}`} />
+                <span className="text-[10px] font-bold tracking-widest uppercase">Landing Page</span>
+              </div>
+              <ChevronRight className={`w-3.5 h-3.5 ${isActive ? 'text-cyan-300' : 'text-slate-500'}`} />
+            </>
+          )}
+        </NavLink>
 
         <NavLink
           to="/settings"

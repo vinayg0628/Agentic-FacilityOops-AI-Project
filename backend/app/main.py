@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.core.database import engine, Base, SessionLocal
@@ -17,6 +17,10 @@ from app.api.intelligence_routes import router as intelligence_router
 # Import new models so Base.metadata knows about them
 import app.models.occupancy_models  # noqa: F401
 import app.models.security_models   # noqa: F401
+import app.models.cost_models       # noqa: F401
+import app.models.vendor_models     # noqa: F401
+import app.models.event_models      # noqa: F401
+import app.models.report_models     # noqa: F401
 
 import logging
 
@@ -59,6 +63,11 @@ def startup_event():
         logger.info("Seeding occupancy & security data...")
         seed_occupancy_security_data(db)
         logger.info("Occupancy & security seeding complete.")
+
+        from app.services.cost_seed_service import seed_cost_data
+        logger.info("Seeding cost & vendor data...")
+        seed_cost_data(db)
+        logger.info("Cost & vendor seeding complete.")
     finally:
         db.close()
 
@@ -85,22 +94,47 @@ app.include_router(maintenance_router.router, prefix=settings.API_V1_STR)
 app.include_router(auth_router.router, prefix=settings.API_V1_STR)
 app.include_router(custom_api_router, prefix=settings.API_V1_STR)
 
+from app.api.cost_routes import router as cost_router
+from app.api.optimization_routes import router as optimization_router
+from app.api.ai_routes import router as ai_router
+from app.api.executive_routes import router as executive_router
+from app.api.reports_routes import router as reports_router
+from app.api.health_routes import router as health_router
+
 # ── Milestone 3 Routers ───────────────────────────────────────────────────────
 app.include_router(occupancy_router, prefix=settings.API_V1_STR)
 app.include_router(security_router, prefix=settings.API_V1_STR)
 app.include_router(incident_router, prefix=settings.API_V1_STR)
 app.include_router(intelligence_router, prefix=settings.API_V1_STR)
 
+# ── Milestone 4 Routers ───────────────────────────────────────────────────────
+app.include_router(cost_router, prefix=settings.API_V1_STR)
+app.include_router(optimization_router, prefix=settings.API_V1_STR)
+app.include_router(ai_router, prefix=settings.API_V1_STR)
+app.include_router(executive_router, prefix=settings.API_V1_STR)
+app.include_router(reports_router, prefix=settings.API_V1_STR)
+app.include_router(health_router, prefix=settings.API_V1_STR)
+
+
 @app.get("/")
 def root():
     return {
         "status": "online",
         "service": settings.PROJECT_NAME,
-        "version": "3.0.0",
-        "milestones": ["Energy Intelligence", "Predictive Maintenance", "Occupancy & Security"],
+        "version": "4.0.0",
+        "milestones": ["Energy Intelligence", "Predictive Maintenance", "Occupancy & Security", "Cost Optimization"],
         "docs": "/docs",
         "health": "OK"
     }
+
+@app.get("/healthz")
+def healthz(db: SessionLocal = Depends(lambda: SessionLocal())):
+    try:
+        from sqlalchemy import text
+        db.execute(text("SELECT 1"))
+        return {"status": "ok", "db": "connected", "models_loaded": True}
+    except Exception as e:
+        return {"status": "error", "error": str(e)}
 
 if __name__ == "__main__":
     import uvicorn

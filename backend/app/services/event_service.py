@@ -1,11 +1,12 @@
-"""In-memory cross-agent event bus for the Intelligence Engine."""
 import uuid
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
+from sqlalchemy.orm import Session
+from app.models.event_models import AgentEvent
+from app.core.database import SessionLocal
 
 logger = logging.getLogger('facilityops.event_service')
-
 
 class EventType:
     HIGH_ENERGY = 'HIGH_ENERGY'
@@ -28,10 +29,15 @@ class EventType:
     DOOR_FORCED = 'DOOR_FORCED'
     CROSS_AGENT_ALERT = 'CROSS_AGENT_ALERT'
     COMBINED_RECOMMENDATION = 'COMBINED_RECOMMENDATION'
-
+    # Cost agent specific
+    HIGH_HVAC_COST = 'HIGH_HVAC_COST'
+    BUDGET_OVERRUN = 'BUDGET_OVERRUN'
+    HIGH_FAILURE_PROBABILITY = 'HIGH_FAILURE_PROBABILITY'
+    SECURITY_INCIDENT = 'SECURITY_INCIDENT'
+    TAILGATING = 'TAILGATING'
 
 class EventService:
-    """Ring-buffer in-memory event store."""
+    """Ring-buffer in-memory event store with DB persistence for Milestone 4."""
 
     def __init__(self, max_events: int = 2000):
         self._events: List[dict] = []
@@ -44,12 +50,30 @@ class EventService:
             'agent': agent,
             'event_type': event_type,
             'severity': severity,
-            'timestamp': datetime.utcnow().isoformat(),
+            'timestamp': datetime.now(timezone.utc).isoformat(),
             'data': data,
         }
         self._events.append(event)
         if len(self._events) > self._max_events:
             self._events = self._events[-self._max_events:]
+            
+        try:
+            db = SessionLocal()
+            db_event = AgentEvent(
+                event_id=event['event_id'],
+                facility_id=facility_id,
+                agent=agent,
+                event_type=event_type,
+                severity=severity,
+                timestamp=datetime.fromisoformat(event['timestamp']),
+                data=data
+            )
+            db.add(db_event)
+            db.commit()
+            db.close()
+        except Exception as e:
+            logger.error(f"Failed to persist event to DB: {e}")
+
         logger.debug('Event published: %s | %s | %s', agent, event_type, facility_id)
         return event
 
@@ -65,12 +89,11 @@ class EventService:
         return events[-limit:]
 
     def get_recent_events(self, minutes: int = 60) -> List[dict]:
-        cutoff = datetime.utcnow().timestamp() - (minutes * 60)
+        cutoff = datetime.now(timezone.utc).timestamp() - (minutes * 60)
         return [e for e in self._events
                 if datetime.fromisoformat(e['timestamp']).timestamp() >= cutoff]
 
     def clear(self):
         self._events = []
-
 
 event_service = EventService()

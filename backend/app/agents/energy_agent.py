@@ -180,6 +180,17 @@ class EnergyAgent:
                 status="Open"
             )
             self.db.add(alert)
+            
+            from app.models.event_models import AgentEvent
+            evt = AgentEvent(
+                facility_id=facility_id,
+                agent="energy",
+                event_type=alert_type.upper().replace(" ", "_"),
+                severity=severity.upper(),
+                timestamp=timestamp,
+                data={"message": message, "recommendation": recommendation}
+            )
+            self.db.add(evt)
 
     def generate_ai_recommendations(self, facility_id: str = None) -> list[dict]:
         """

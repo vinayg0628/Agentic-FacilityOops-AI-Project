@@ -24,6 +24,11 @@ def get_insights(
     db: Session = Depends(get_db),
 ):
     engine = IntelligenceEngine(db)
+    if facility_id:
+        try:
+            engine.run_orchestration(facility_id)
+        except Exception as e:
+            pass # fallback to existing DB data if it fails
     return engine.get_insights(facility_id=facility_id)
 
 

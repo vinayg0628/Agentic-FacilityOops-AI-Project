@@ -1,9 +1,8 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { FacilityProvider } from './context/FacilityContext';
-import { Navbar } from './components/layout/Navbar';
-import { Sidebar } from './components/layout/Sidebar';
-import { IngestDataModal } from './components/common/IngestDataModal';
+import { DashboardLayout } from './components/layout/DashboardLayout';
+import { LandingPage } from './pages/LandingPage';
 
 import { DashboardPage } from './pages/DashboardPage';
 import { MonitoringPage } from './pages/MonitoringPage';
@@ -26,47 +25,56 @@ import { SecurityAlertsPage } from './pages/security/SecurityAlertsPage';
 import { IncidentPage } from './pages/security/IncidentPage';
 import { IncidentDetailPage } from './pages/security/IncidentDetailPage';
 
+import ExecutiveDashboard from './pages/executive/ExecutiveDashboard';
+import CostDashboard from './pages/cost/CostDashboard';
+import OptimizationCenter from './pages/optimization/OptimizationCenter';
+import CrossAgentInsights from './pages/intelligence/CrossAgentInsights';
+import AskFacilityAI from './pages/facility-ai/AskFacilityAI';
+
 export function App() {
   return (
     <FacilityProvider>
       <Router>
-        <div className="min-h-screen flex flex-col bg-[var(--bg-main)] text-[var(--text-primary)] antialiased">
-          
-          {/* Top Navigation Bar */}
-          <Navbar activeAlertsCount={3} />
+        <Routes>
+          {/* Public Landing Page */}
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/landing" element={<LandingPage />} />
 
-          {/* Main Body Layout */}
-          <div className="flex flex-1">
-            <Sidebar />
-
-            <main className="flex-1 p-6 overflow-y-auto max-w-7xl mx-auto w-full">
-              <Routes>
-                <Route path="/" element={<DashboardPage />} />
-                <Route path="/energy" element={<MonitoringPage />} />
-                <Route path="/analytics" element={<AnalyticsPage />} />
-                <Route path="/alerts" element={<AlertsPage />} />
-                <Route path="/recommendations" element={<RecommendationsPage />} />
-                <Route path="/reports" element={<ReportsPage />} />
-                <Route path="/settings" element={<SettingsPage />} />
-                <Route path="/maintenance" element={<MaintenanceDashboard />} />
-                <Route path="/maintenance/equipment" element={<EquipmentPage />} />
-                <Route path="/maintenance/health" element={<HealthScoresPage />} />
-                <Route path="/maintenance/predictions" element={<PredictionsPage />} />
-                <Route path="/maintenance/schedule" element={<SchedulePage />} />
-                <Route path="/maintenance/alerts" element={<AlertsManagementPage />} />
-                <Route path="/occupancy" element={<OccupancyPage />} />
-                <Route path="/occupancy/analytics" element={<OccupancyAnalyticsPage />} />
-                <Route path="/occupancy/heatmap" element={<OccupancyHeatmapPage />} />
-                <Route path="/security" element={<SecurityPage />} />
-                <Route path="/security/alerts" element={<SecurityAlertsPage />} />
-                <Route path="/security/incidents" element={<IncidentPage />} />
-                <Route path="/security/incidents/:id" element={<IncidentDetailPage />} />
-              </Routes>
-            </main>
-          </div>
-
-          <IngestDataModal />
-        </div>
+          {/* Operational FacilityOps Dashboard Layout */}
+          <Route element={<DashboardLayout />}>
+            <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/energy" element={<MonitoringPage />} />
+            <Route path="/analytics" element={<AnalyticsPage />} />
+            <Route path="/alerts" element={<AlertsPage />} />
+            <Route path="/recommendations" element={<RecommendationsPage />} />
+            <Route path="/reports" element={<ReportsPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
+            
+            {/* Maintenance */}
+            <Route path="/maintenance" element={<MaintenanceDashboard />} />
+            <Route path="/maintenance/equipment" element={<EquipmentPage />} />
+            <Route path="/maintenance/health" element={<HealthScoresPage />} />
+            <Route path="/maintenance/predictions" element={<PredictionsPage />} />
+            <Route path="/maintenance/schedule" element={<SchedulePage />} />
+            <Route path="/maintenance/alerts" element={<AlertsManagementPage />} />
+            
+            {/* Occupancy & Security */}
+            <Route path="/occupancy" element={<OccupancyPage />} />
+            <Route path="/occupancy/analytics" element={<OccupancyAnalyticsPage />} />
+            <Route path="/occupancy/heatmap" element={<OccupancyHeatmapPage />} />
+            <Route path="/security" element={<SecurityPage />} />
+            <Route path="/security/alerts" element={<SecurityAlertsPage />} />
+            <Route path="/security/incidents" element={<IncidentPage />} />
+            <Route path="/security/incidents/:id" element={<IncidentDetailPage />} />
+            
+            {/* Cost Optimization & Intelligence (Milestone 4) */}
+            <Route path="/executive" element={<ExecutiveDashboard />} />
+            <Route path="/cost" element={<CostDashboard />} />
+            <Route path="/optimization" element={<OptimizationCenter />} />
+            <Route path="/intelligence" element={<CrossAgentInsights />} />
+            <Route path="/facility-ai" element={<AskFacilityAI />} />
+          </Route>
+        </Routes>
       </Router>
     </FacilityProvider>
   );

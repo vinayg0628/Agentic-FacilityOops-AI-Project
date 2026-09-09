@@ -100,11 +100,22 @@ def decode_token(token: str) -> dict:
 def get_current_user_email(token: str = Depends(oauth2_scheme)) -> str:
     """
     FastAPI dependency that extracts the current user's email from the Bearer token.
-
-    Usage:
-        @router.get("/me")
-        def me(email: str = Depends(get_current_user_email)):
-            ...
     """
     payload = decode_token(token)
     return payload.get("sub")
+
+def require_role(allowed_roles: list[str]):
+    def role_checker(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+        payload = decode_token(token)
+        email = payload.get("sub")
+        
+        from app.models.user import User
+        user = db.query(User).filter(User.email == email).first()
+        if not user or not user.is_active:
+            raise HTTPException(status_code=401, detail="User not found or inactive")
+            
+        if user.role not in allowed_roles:
+            raise HTTPException(status_code=403, detail="Not enough permissions")
+            
+        return user
+    return role_checker

@@ -1,255 +1,138 @@
-"""Intelligence Engine: cross-agent reasoning and scenario detection."""
-import logging, uuid, datetime
+import logging
+from datetime import datetime, timezone, timedelta
 from sqlalchemy.orm import Session
-from app.services.event_service import event_service
-from app.models.occupancy_models import Room, OccupancyReading, OccupancyEvent
-from app.models.security_models import AccessLog, CCTVEvent
+from app.models.event_models import AgentEvent, AgentInsight
+from app.models.cost_models import OptimizationOpportunity, CostRecord
 
-logger = logging.getLogger('facilityops.intelligence_engine')
-FACILITY_IDS = ['FAC-001', 'FAC-002', 'FAC-003', 'FAC-004', 'FAC-005']
+logger = logging.getLogger(__name__)
 
 class IntelligenceEngine:
+    """
+    Cross-Agent Orchestration Layer (Milestone 4).
+    Receives structured events, applies rules, coordinates across agents,
+    and generates unified recommendations (AgentInsight).
+    """
+
     def __init__(self, db: Session):
         self.db = db
 
-    def get_insights(self, facility_id: str = None):
-        facilities = [facility_id] if facility_id else FACILITY_IDS
+    def _get_recent_events(self, facility_id: str, hours: int = 24):
+        cutoff = datetime.now(timezone.utc) - timedelta(hours=hours)
+        return self.db.query(AgentEvent).filter(
+            AgentEvent.facility_id == facility_id,
+            AgentEvent.timestamp >= cutoff
+        ).all()
+
+    def run_orchestration(self, facility_id: str):
+        logger.info(f"IntelligenceEngine running for facility: {facility_id}")
+        events = self._get_recent_events(facility_id, hours=48)
+        
+        # Categorize events by agent
+        energy_events = [e for e in events if e.agent == 'energy']
+        maint_events = [e for e in events if e.agent == 'maintenance']
+        occ_events = [e for e in events if e.agent == 'occupancy']
+        sec_events = [e for e in events if e.agent == 'security']
+        cost_events = [e for e in events if e.agent == 'cost']
+
+        # Helpers to check specific event existence
+        has_high_hvac_energy = any(e.event_type == 'HVAC_OVERLOAD' or e.event_type == 'HIGH_HVAC_CONSUMPTION' for e in energy_events)
+        has_high_hvac_cost = any(e.event_type == 'HIGH_HVAC_COST' for e in cost_events)
+        has_high_failure_prob = any(e.severity in ['HIGH', 'CRITICAL'] and 'failure' in str(e.data).lower() for e in maint_events)
+        has_emergency_repair_cost = any(e.event_type == 'EMERGENCY_REPAIR' for e in maint_events)
+        has_low_occ = any(e.event_type == 'LOW_OCCUPANCY' for e in occ_events)
+        has_high_energy = any(e.event_type == 'HIGH_ENERGY' for e in energy_events)
+        has_high_cost = len(cost_events) > 0 # any cost event implies cost concern
+        has_rising_sec_issues = any(e.event_type == 'UNAUTHORIZED_ACCESS' for e in sec_events)
+        has_rising_sec_cost = any(e.event_type == 'SECURITY_INCIDENT_COST' for e in cost_events)
+        has_high_occ = any(e.event_type == 'PEAK_OCCUPANCY' or e.event_type == 'OVERCROWDING' for e in occ_events)
+        has_poor_hvac_health = any('hvac' in str(e.data).lower() for e in maint_events)
+        has_no_sec_issue = len(sec_events) == 0
+
         insights = []
-        for fac in facilities:
-            insights += self._scenario_ghost_motion(fac)
-            insights += self._scenario_tailgating_mismatch(fac)
-            
-            # Add existing baseline scenarios
-            insights += self._scenario_low_occupancy_high_energy(fac)
-            insights += self._scenario_after_hours_activity(fac)
-            insights += self._scenario_high_occupancy_hvac_stress(fac)
+
+        # Scenario A: High HVAC energy % + high HVAC cost
+        if has_high_hvac_energy and has_high_hvac_cost:
+            insights.append(AgentInsight(
+                facility_id=facility_id,
+                title="HVAC Energy & Cost Optimization",
+                description="Detected high HVAC usage coupled with elevated HVAC costs.",
+                severity="HIGH",
+                agents_involved=["energy", "cost"],
+                recommended_action="Reduce HVAC operation during low-occupancy periods to reduce monthly energy expenditure.",
+                estimated_savings=85000.0
+            ))
+
+        # Scenario B: High failure probability + high emergency repair cost estimate
+        if has_high_failure_prob and has_emergency_repair_cost:
+            insights.append(AgentInsight(
+                facility_id=facility_id,
+                title="Preventive Maintenance ROI",
+                description="High equipment failure probability matching historical emergency repair spikes.",
+                severity="CRITICAL",
+                agents_involved=["maintenance", "cost"],
+                recommended_action="Perform preventive maintenance now to avoid a potential ₹2.5L emergency repair.",
+                estimated_savings=210000.0 # Avoided cost (2.5L - 40k)
+            ))
+
+        # Scenario C: Low occupancy + high energy + high cost
+        if has_low_occ and has_high_energy and has_high_cost:
+            insights.append(AgentInsight(
+                facility_id=facility_id,
+                title="Workspace Consolidation",
+                description="Zone showing low occupancy but high energy consumption and cost.",
+                severity="MEDIUM",
+                agents_involved=["occupancy", "energy", "cost"],
+                recommended_action="Consolidate low-occupancy operations and reduce HVAC/lighting operation during unused periods.",
+                estimated_savings=45000.0
+            ))
+
+        # Scenario D: Rising unauthorized access + rising security staffing cost
+        if has_rising_sec_issues and has_rising_sec_cost:
+            insights.append(AgentInsight(
+                facility_id=facility_id,
+                title="Security Staffing Inefficiency",
+                description="Unauthorized access increasing while security costs rise.",
+                severity="HIGH",
+                agents_involved=["security", "cost"],
+                recommended_action="Security incidents are increasing. Before expanding staffing, investigate access-control failures and improve access policies.",
+                estimated_savings=120000.0
+            ))
+
+        # Scenario E: High occupancy + high HVAC usage + poor HVAC health + no security issue + rising cost
+        if has_high_occ and has_high_hvac_energy and has_poor_hvac_health and has_no_sec_issue and has_high_cost:
+            insights.append(AgentInsight(
+                facility_id=facility_id,
+                title="Occupancy-Driven HVAC Overload",
+                description="HVAC under sustained load due to high occupancy, leading to inefficiency and cost increases.",
+                severity="HIGH",
+                agents_involved=["occupancy", "energy", "maintenance", "security", "cost"],
+                recommended_action="Prioritize HVAC maintenance and optimize cooling settings instead of reducing occupancy-related operations.",
+                estimated_savings=60000.0
+            ))
+
+        # Deduplicate and save
+        for insight in insights:
+            # Check if similar insight already exists recently
+            cutoff = datetime.now(timezone.utc) - timedelta(days=7)
+            existing = self.db.query(AgentInsight).filter(
+                AgentInsight.facility_id == facility_id,
+                AgentInsight.title == insight.title,
+                AgentInsight.timestamp >= cutoff
+            ).first()
+            if not existing:
+                self.db.add(insight)
+                
+        self.db.commit()
         return insights
 
-    def _make_insight(self, scenario, facility_id, severity, title, description, agents, action):
-        return {
-            'insight_id': str(uuid.uuid4())[:8],
-            'scenario': scenario,
-            'facility_id': facility_id,
-            'severity': severity,
-            'title': title,
-            'description': description,
-            'agents_involved': agents,
-            'recommended_action': action,
-            'timestamp': datetime.datetime.utcnow().isoformat(),
-        }
+    def get_insights(self, facility_id: str = None, limit: int = 10):
+        q = self.db.query(AgentInsight)
+        if facility_id:
+            q = q.filter(AgentInsight.facility_id == facility_id)
+        return q.order_by(AgentInsight.timestamp.desc()).limit(limit).all()
 
-    def _scenario_ghost_motion(self, facility_id: str):
-        """
-        Scenario: Occupancy is 0 on a floor, but CCTV detects motion.
-        Result: HIGH SECURITY RISK.
-        """
-        insights = []
-        cutoff = datetime.datetime.utcnow() - datetime.timedelta(minutes=15)
-        
-        # 1. Find floors/zones where occupancy is exactly 0 recently
-        recent_occ = (
-            self.db.query(OccupancyReading)
-            .filter(OccupancyReading.facility_id == facility_id)
-            .filter(OccupancyReading.timestamp >= cutoff)
-            .all()
-        )
-        # Check by floor
-        zero_occ_floors = set()
-        for r in recent_occ:
-            if r.people_count == 0:
-                zero_occ_floors.add(r.floor)
-                
-        if not zero_occ_floors:
-            return []
-            
-        # 2. Check CCTV events for those floors
-        recent_cctv = (
-            self.db.query(CCTVEvent)
-            .filter(CCTVEvent.facility_id == facility_id)
-            .filter(CCTVEvent.timestamp >= cutoff)
-            .filter(CCTVEvent.event_type.in_(['Motion Detected', 'Person Detected']))
-            .all()
-        )
-        
-        for event in recent_cctv:
-            # Simple heuristic to extract floor from zone_id e.g. "FAC-001-Floor3"
-            for floor in zero_occ_floors:
-                floor_str = f"Floor{floor}"
-                if floor_str in event.zone_id:
-                    insight = self._make_insight(
-                        scenario='ghost_motion',
-                        facility_id=facility_id,
-                        severity='CRITICAL',
-                        title='Ghost Motion: Movement in Empty Zone',
-                        description=f'Unexpected movement detected in {event.zone_id}. '
-                                    'Occupancy sensors report 0 people in this restricted area.',
-                        agents=['occupancy', 'security'],
-                        action='Trigger lockdown for the zone and dispatch security personnel immediately.'
-                    )
-                    event_service.publish(facility_id=facility_id, agent='intelligence',
-                        event_type='CROSS_AGENT_ALERT', severity='CRITICAL', data=insight)
-                    insights.append(insight)
-                    break # Avoid duplicate insights for same event
-        return insights
-
-    def _scenario_tailgating_mismatch(self, facility_id: str):
-        """
-        Scenario: 1 person swiped card, but Occupancy or CCTV detected > 1 person.
-        Result: Tailgating detected -> Raise risk score.
-        """
-        insights = []
-        cutoff = datetime.datetime.utcnow() - datetime.timedelta(minutes=30)
-        
-        # 1. Find recent successful access logs
-        recent_access = (
-            self.db.query(AccessLog)
-            .filter(AccessLog.facility_id == facility_id, AccessLog.result == 'Allowed', AccessLog.timestamp >= cutoff)
-            .all()
-        )
-        if not recent_access:
-            return []
-            
-        # For simplicity, let's group by 5-min windows or just check nearby events
-        for acc in recent_access:
-            acc_time = acc.timestamp
-            t_start = acc_time - datetime.timedelta(minutes=2)
-            t_end = acc_time + datetime.timedelta(minutes=2)
-            
-            # Check CCTV counts nearby
-            cctv_events = (
-                self.db.query(CCTVEvent)
-                .filter(CCTVEvent.facility_id == facility_id, CCTVEvent.zone_id == acc.zone_id)
-                .filter(CCTVEvent.timestamp.between(t_start, t_end))
-                .all()
-            )
-            cctv_tailgate = any(c.person_count > 1 or 'Multiple' in c.event_type for c in cctv_events)
-            
-            # Check Occupancy Entry spikes (assume room matches zone floor)
-            # Find matching floor from zone
-            floor_val = None
-            if 'Floor1' in acc.zone_id: floor_val = 1
-            elif 'Floor2' in acc.zone_id: floor_val = 2
-            elif 'Floor3' in acc.zone_id: floor_val = 3
-            
-            occ_spike = False
-            if floor_val:
-                occ_readings = (
-                    self.db.query(OccupancyReading)
-                    .filter(OccupancyReading.facility_id == facility_id, OccupancyReading.floor == floor_val)
-                    .filter(OccupancyReading.timestamp.between(t_start, t_end))
-                    .all()
-                )
-                occ_spike = any(r.entry_count > 1 for r in occ_readings)
-                
-            if cctv_tailgate or occ_spike:
-                desc_parts = []
-                if occ_spike: desc_parts.append('Occupancy sensor recorded multiple entries.')
-                if cctv_tailgate: desc_parts.append('CCTV detected multiple people.')
-                
-                insight = self._make_insight(
-                    scenario='tailgating_mismatch',
-                    facility_id=facility_id,
-                    severity='HIGH',
-                    title='Inconsistent Entry: Tailgating Suspected',
-                    description=f'Single access card swipe recorded for {acc.user_id}, but physical sensors '
-                                f'indicate multiple people entered {acc.zone_id}. ' + " ".join(desc_parts),
-                    agents=['occupancy', 'security'],
-                    action='Flag user for security review. Raise risk score for the current zone.'
-                )
-                event_service.publish(facility_id=facility_id, agent='intelligence',
-                    event_type='CROSS_AGENT_ALERT', severity='HIGH', data=insight)
-                insights.append(insight)
-                break  # Return just one tailgating alert per run for simplicity
-                
-        return insights
-
-
-    # ---------------------------------------------------------
-    # Baseline existing scenarios
-    # ---------------------------------------------------------
-
-    def _scenario_low_occupancy_high_energy(self, facility_id: str):
-        events = event_service.get_events(facility_id=facility_id)
-        has_low_occ = any(e['event_type'] == 'LOW_OCCUPANCY' for e in events)
-        has_high_energy = any(e['event_type'] == 'HIGH_ENERGY' for e in events)
-        if has_low_occ and has_high_energy:
-            insight = self._make_insight(
-                'low_occupancy_high_energy', facility_id, 'HIGH',
-                'Low Occupancy + High Energy Consumption',
-                f'Facility {facility_id} has low occupancy but unusually high energy consumption. '
-                'HVAC and lighting may be running unnecessarily in unoccupied zones.',
-                ['occupancy', 'energy'],
-                'Reduce HVAC and lighting loads in zones with <20% occupancy. Estimated savings: 20-35%.',
-            )
-            event_service.publish(facility_id=facility_id, agent='intelligence',
-                event_type='CROSS_AGENT_ALERT', severity='HIGH', data=insight)
-            return [insight]
-        return []
-
-    def _scenario_after_hours_activity(self, facility_id: str):
-        events = event_service.get_events(facility_id=facility_id)
-        has_after_hours = any(e['event_type'] in ('AFTER_HOURS_ACTIVITY', 'UNAUTHORIZED_ACCESS') for e in events)
-        has_low_occ = any(e['event_type'] == 'LOW_OCCUPANCY' for e in events)
-        if has_after_hours or has_low_occ:
-            cutoff = datetime.datetime.utcnow() - datetime.timedelta(hours=8)
-            after_hours_logs = (
-                self.db.query(AccessLog)
-                .filter(
-                    AccessLog.facility_id == facility_id,
-                    AccessLog.result == 'Denied',
-                    AccessLog.timestamp >= cutoff,
-                ).count()
-            )
-            if after_hours_logs > 2:
-                insight = self._make_insight(
-                    'after_hours_security', facility_id, 'CRITICAL',
-                    'Suspicious After-Hours Activity Detected',
-                    f'Multiple denied access attempts in {facility_id} during off-hours. '
-                    'Occupancy sensors show low or no presence, yet access attempts continue.',
-                    ['security', 'occupancy'],
-                    'Dispatch security personnel. Review CCTV footage. Lock down affected zones.',
-                )
-                event_service.publish(facility_id=facility_id, agent='intelligence',
-                    event_type='CROSS_AGENT_ALERT', severity='CRITICAL', data=insight)
-                return [insight]
-        return []
-
-    def _scenario_high_occupancy_hvac_stress(self, facility_id: str):
-        events = event_service.get_events(facility_id=facility_id)
-        has_peak = any(e['event_type'] in ('PEAK_OCCUPANCY', 'OVERCROWDING') for e in events)
-        has_maint = any(e['event_type'] in ('EQUIPMENT_HEALTH_LOW', 'MAINTENANCE_REQUIRED') for e in events)
-        if has_peak and has_maint:
-            insight = self._make_insight(
-                'high_occupancy_hvac_stress', facility_id, 'HIGH',
-                'High Occupancy + HVAC Under Stress',
-                f'Facility {facility_id} is at peak occupancy while HVAC health is degrading. '
-                'Sustained thermal load may accelerate equipment failure.',
-                ['occupancy', 'maintenance'],
-                'Schedule preventive HVAC inspection. Consider temporary cooling units for high-density zones.',
-            )
-            event_service.publish(facility_id=facility_id, agent='intelligence',
-                event_type='CROSS_AGENT_ALERT', severity='HIGH', data=insight)
-            return [insight]
-        return []
-
-    def get_recommendations(self, facility_id: str = None):
-        insights = self.get_insights(facility_id)
-        recs = []
-        # deduplicate insights by title to avoid UI clutter
-        seen_titles = set()
-        for ins in insights:
-            if ins['title'] in seen_titles:
-                continue
-            seen_titles.add(ins['title'])
-            recs.append({
-                'recommendation_id': ins['insight_id'],
-                'source': 'Intelligence Engine',
-                'agents_involved': ins['agents_involved'],
-                'priority': ins['severity'],
-                'title': ins['title'],
-                'description': ins['description'],
-                'action': ins['recommended_action'],
-                'facility_id': ins['facility_id'],
-                'timestamp': ins['timestamp'],
-            })
-        return recs
+    def get_recommendations(self, facility_id: str = None, limit: int = 10):
+        q = self.db.query(AgentInsight).filter(AgentInsight.recommended_action != None)
+        if facility_id:
+            q = q.filter(AgentInsight.facility_id == facility_id)
+        return q.order_by(AgentInsight.timestamp.desc()).limit(limit).all()

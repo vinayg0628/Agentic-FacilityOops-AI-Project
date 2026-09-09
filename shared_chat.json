@@ -1,0 +1,56 @@
+{
+  "id": "85ba5110-5e2f-42dd-aa53-91daebc356b3",
+  "user_id": "shared-1a539606-9648-4f48-924b-f6140c68b223",
+  "title": "Design a high-end fitness studio brand official we...",
+  "chat": {
+    "models": [
+      "glm-5.2"
+    ],
+    "params": {},
+    "history": {
+      "messages": {
+        "232572fc-87e7-44f7-8f91-87e774823ae9": {
+          "id": "232572fc-87e7-44f7-8f91-87e774823ae9",
+          "parentId": null,
+          "childrenIds": [
+            "93d5cb4e-f124-4788-bdc5-e3fb99025553"
+          ],
+          "role": "user",
+          "timestamp": 1781577823,
+          "content": "Design a high-end fitness studio brand official website, emphasizing professionalism and community belonging.\n\nVisual Strategy:\nImagery: athletic poses, sweat, muscle definition, equipment texture.\nPhotography: high-contrast black and white, emphasizing strength and beauty.\nComposition: people as the main subject, blurred surroundings.\n\nColor Palette:\nPrimary Colors: pure black, dark gray.\nAccent Colors: neon orange, metallic silver.\nBackground: dark, strong textural feel.\n\nTypography:\nHeadings: bold sans-serif, powerful.\nBody Text: clean and forceful, condensed information.\nWhitespace: minimal, high information density.\n\nPage Structure:\nHero Section: brand attitude + coach team showcase.\nCurriculum: organized by goals (muscle gain, fat loss, fitness).\nCoach Profiles: professional background + certifications.\nMember Stories: real transformation case studies.\nBook a Trial Class: clear CTA button.\n\nInteraction Details:\n- Hero auto-plays a muted slow-motion training reel; click to unmute.\n- Section reveals use staggered fade + slight upward translate on scroll.\n- Coach cards flip on hover to reveal certifications and signature workout.\n- \"Book a Trial Class\" CTA pulses softly and snaps to a sticky bottom bar on scroll.\n- Member story carousel auto-advances; drag-to-swipe with rubber-band easing.\n- Subtle grain-texture parallax drifts as you scroll.\n\nOverall Vibe: professional, hardcore, motivating, sense of belonging.",
+          "models": [
+            "glm-5.2"
+          ]
+        },
+        "93d5cb4e-f124-4788-bdc5-e3fb99025553": {
+          "id": "93d5cb4e-f124-4788-bdc5-e3fb99025553",
+          "parentId": "232572fc-87e7-44f7-8f91-87e774823ae9",
+          "childrenIds": [],
+          "role": "assistant",
+          "timestamp": 1781577824
+        }
+      },
+      "currentId": "93d5cb4e-f124-4788-bdc5-e3fb99025553"
+    },
+    "tags": [],
+    "enable_thinking": true,
+    "timestamp": 1781577823
+  },
+  "updated_at": 1781578220,
+  "created_at": 1781577823,
+  "share_id": null,
+  "archived": false,
+  "pinned": false,
+  "meta": {
+    "auto_web_search": false,
+    "flags": [],
+    "mcp_servers": [],
+    "models": [
+      "glm-5.2"
+    ]
+  },
+  "folder_id": null,
+  "message_version": 1,
+  "type": "default",
+  "im_context": null
+}

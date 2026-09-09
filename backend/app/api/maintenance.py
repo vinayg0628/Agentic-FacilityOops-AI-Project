@@ -118,6 +118,16 @@ def create_monitoring_record(record: MonitoringCreate, db: Session = Depends(get
             status='Open'
         )
         db.add(db_alert)
+        
+        from app.models.event_models import AgentEvent
+        evt = AgentEvent(
+            facility_id=eq.facility_id,
+            agent="maintenance",
+            event_type=a['issue'].upper().replace(" ", "_"),
+            severity=a['severity'].upper(),
+            data={"equipment_id": eq.equipment_id, "recommendation": a['recommendation']}
+        )
+        db.add(evt)
         created_alerts.append(a)
         
     db.commit()

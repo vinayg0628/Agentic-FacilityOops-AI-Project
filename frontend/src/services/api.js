@@ -283,3 +283,5 @@ function generateMockRecommendations(facId) {
     }
   ];
 }
+
+export default apiClient;

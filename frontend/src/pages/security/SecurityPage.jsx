@@ -82,7 +82,7 @@ export const SecurityPage = () => {
     const deniedCount   = analytics?.denied_count ?? 0;
     const activeVisitors = analytics?.active_visitors ?? 0;
     const anomalyCount  = anomalyData?.anomalies_found ?? 0;
-    const openIncidents = riskData?.critical_alerts + riskData?.high_alerts ?? 0;
+    const openIncidents = (riskData?.critical_alerts || 0) + (riskData?.high_alerts || 0);
     const deniedByHour  = analytics?.denied_by_hour ?? {};
     const allowedByHour = analytics?.allowed_by_hour ?? {};
     const scatter       = anomalyData?.scatter_data ?? [];

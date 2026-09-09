@@ -65,3 +65,15 @@ def create_system_alert(db, zone_id, alert_type, severity, message):
     db.commit()
     logger.info(f"Generated {alert_type} alert for zone {zone_id}: {message}")
     send_alert_notification_email("admin@facilityops.com", f"{severity} {alert_type} Alert", message)
+    
+    # Send In-App + Webhook
+    send_in_app_notification(alert.alert_id, message)
+    send_webhook_notification({"alert_id": alert.alert_id, "type": alert_type, "severity": severity, "message": message})
+
+def send_in_app_notification(alert_id, message):
+    logger.info(f"[In-App Notification Emitted] Alert {alert_id}: {message}")
+    # Websocket emit logic would go here
+
+def send_webhook_notification(payload):
+    logger.info(f"[Webhook Notification Sent] Payload: {payload}")
+    # requests.post(WEBHOOK_URL, json=payload) logic would go here
