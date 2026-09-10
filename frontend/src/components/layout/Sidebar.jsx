@@ -22,7 +22,6 @@ import {
   Grid,
   Shield,
   AlertOctagon,
-  Globe
 } from 'lucide-react';
 
 // ── Agent definitions ─────────────────────────────────────────────────────────
@@ -277,28 +276,6 @@ export const Sidebar = () => {
             onToggle={() => toggle(agent.id)}
           />
         ))}
-
-        <NavLink
-          to="/landing"
-          className={({ isActive }) =>
-            `flex items-center justify-between px-3.5 py-3 rounded-2xl border transition-all duration-200 ${
-              isActive
-                ? 'bg-gradient-to-r from-cyan-900/60 to-blue-900/50 border-cyan-500/40 text-cyan-200 shadow-sm'
-                : 'sidebar-settings-link bg-slate-800/50 border-slate-800/60 text-slate-300 hover:text-slate-100 hover:bg-slate-800/80'
-            }`
-          }
-        >
-          {({ isActive }) => (
-            <>
-              <div className="flex items-center gap-2.5">
-                <span className={`w-2 h-2 rounded-full shrink-0 ${isActive ? 'bg-cyan-400 animate-ping' : 'bg-cyan-500/60'}`} />
-                <Globe className={`w-3.5 h-3.5 ${isActive ? 'text-cyan-300' : 'text-cyan-400'}`} />
-                <span className="text-[10px] font-bold tracking-widest uppercase">Landing Page</span>
-              </div>
-              <ChevronRight className={`w-3.5 h-3.5 ${isActive ? 'text-cyan-300' : 'text-slate-500'}`} />
-            </>
-          )}
-        </NavLink>
 
         <NavLink
           to="/settings"

@@ -25,47 +25,9 @@ def _random_name():
     return f'{random.choice(FIRST_NAMES)} {random.choice(LAST_NAMES)}'
 
 
-def seed_occupancy_security_data(db: Session) -> None:
-    from app.models.occupancy_models import Room, OccupancyReading, OccupancyPrediction
-    from app.models.security_models import AccessLog, Visitor, CCTVEvent, SecurityIncident, SecurityAlert
+def _seed_occupancy_readings(db, rooms, now):
+    from app.models.occupancy_models import OccupancyReading
 
-    if db.query(Room).count() > 0:
-        logger.info('Occupancy/Security data already seeded.')
-        return
-
-    logger.info('Seeding Occupancy & Security data...')
-    random.seed(2024)
-    now = datetime.datetime.utcnow()
-
-    # ── 1. Rooms
-    rooms = []
-    room_map = {}
-    for fac in FACILITY_IDS:
-        room_map[fac] = []
-        for floor in range(1, 4):
-            for idx in range(3):
-                rt = ROOM_TYPES[(floor * 3 + idx) % len(ROOM_TYPES)]
-                capacity = random.choice([15, 20, 30, 40, 50, 80, 100])
-                if rt in ('Conference Room', 'Cafeteria', 'Lobby'):
-                    capacity = random.choice([50, 80, 100, 150])
-                r = Room(
-                    room_id=f'{fac}-F{floor}-R{idx+1}',
-                    facility_id=fac,
-                    floor=floor,
-                    room_name=f'Floor {floor} {rt} {idx+1}',
-                    room_type=rt,
-                    capacity=capacity,
-                    area_sqft=float(capacity * random.randint(10, 20)),
-                    zone=f'Floor-{floor}',
-                    status='active',
-                )
-                rooms.append(r)
-                room_map[fac].append(r)
-    db.add_all(rooms)
-    db.flush()
-    logger.info('  Rooms: %d created', len(rooms))
-
-    # ── 2. OccupancyReadings (hourly, 7 days)
     readings = []
     t = now - datetime.timedelta(days=7)
     while t <= now:
@@ -79,26 +41,95 @@ def seed_occupancy_security_data(db: Session) -> None:
         elif 18 <= hr < 21: base = 0.30
         else: base = 0.10
         if is_weekend: base *= 0.25
-        for fac in FACILITY_IDS:
-            for room in room_map[fac]:
+        for room in rooms:
+            # Use the exact target occupancy if this is the final 'now' timestamp, otherwise random
+            if t == now and hasattr(room, 'target_occupancy'):
+                rate = room.target_occupancy
+            else:
                 rate = min(1.1, max(0.0, base + random.gauss(0, 0.1)))
-                count = min(room.capacity + 2, max(0, int(rate * room.capacity)))
-                readings.append(OccupancyReading(
-                    facility_id=fac,
-                    room_id=room.room_id,
-                    floor=room.floor,
-                    timestamp=t,
-                    people_count=count,
-                    entry_count=max(0, count - random.randint(0, 2)),
-                    exit_count=random.randint(0, max(1, count // 4)),
-                    capacity=room.capacity,
-                    occupancy_rate=round(count / room.capacity, 4),
-                ))
+            
+            count = min(room.capacity + 2, max(0, int(rate * room.capacity)))
+            readings.append(OccupancyReading(
+                facility_id=room.facility_id,
+                room_id=room.room_id,
+                floor=room.floor,
+                timestamp=t,
+                people_count=count,
+                entry_count=max(0, count - random.randint(0, 2)),
+                exit_count=random.randint(0, max(1, count // 4)),
+                capacity=room.capacity,
+                occupancy_rate=round(count / room.capacity, 4),
+            ))
         t += datetime.timedelta(hours=1)
     for i in range(0, len(readings), 500):
         db.bulk_save_objects(readings[i:i+500])
+    return len(readings)
+
+
+def seed_occupancy_security_data(db: Session) -> None:
+    from app.models.occupancy_models import Room, OccupancyReading, OccupancyPrediction
+    from app.models.security_models import AccessLog, Visitor, CCTVEvent, SecurityIncident, SecurityAlert
+
+    if db.query(Room).count() > 0:
+        latest = db.query(OccupancyReading.timestamp).order_by(OccupancyReading.timestamp.desc()).first()
+        now = datetime.datetime.utcnow()
+        if latest is None or latest[0] < now - datetime.timedelta(days=7):
+            logger.info('Occupancy readings are missing or stale; refreshing occupancy data...')
+            random.seed(2024)
+            db.query(OccupancyReading).delete()
+            created = _seed_occupancy_readings(db, db.query(Room).all(), now)
+            db.commit()
+            logger.info('  OccupancyReadings refreshed: %d created', created)
+        else:
+            logger.info('Occupancy/Security data already seeded.')
+        return
+
+    logger.info('Seeding Occupancy & Security data...')
+    random.seed(2024)
+    now = datetime.datetime.utcnow()
+
+    # ── 1. Rooms
+    rooms = []
+    room_map = {}
+    DEMO_ROOMS = [
+        ('Open Workspace A', 'Office', 100, 0.85),
+        ('Conference Room 1', 'Conference Room', 50, 0.68),
+        ('Meeting Room 2', 'Meeting Room', 20, 0.42),
+        ('Cafeteria', 'Cafeteria', 150, 0.61),
+        ('Common Area', 'Common Area', 80, 0.20),
+        ('Data Center', 'Server Room', 30, 0.15),
+        ('Laboratory', 'Laboratory', 40, 0.55),
+        ('Open Workspace B', 'Office', 100, 0.74),
+        ('Storage', 'Storage', 20, 0.08),
+        ('Server Room', 'Server Room', 30, 0.22),
+    ]
+
+    for fac in FACILITY_IDS:
+        room_map[fac] = []
+        for floor in range(1, 4):
+            for idx, (rname, rtype, cap, target_occ) in enumerate(DEMO_ROOMS):
+                r = Room(
+                    room_id=f'{fac}-F{floor}-R{idx+1}',
+                    facility_id=fac,
+                    floor=floor,
+                    room_name=f'Floor {floor} {rname}',
+                    room_type=rtype,
+                    capacity=cap,
+                    area_sqft=float(cap * random.randint(10, 20)),
+                    zone=f'Floor-{floor}',
+                    status='active',
+                )
+                r.target_occupancy = target_occ
+                rooms.append(r)
+                room_map[fac].append(r)
+    db.add_all(rooms)
     db.flush()
-    logger.info('  OccupancyReadings: %d created', len(readings))
+    logger.info('  Rooms: %d created', len(rooms))
+
+    # ── 2. OccupancyReadings (hourly, 7 days)
+    created = _seed_occupancy_readings(db, rooms, now)
+    db.flush()
+    logger.info('  OccupancyReadings: %d created', created)
 
     # ── 3. AccessLogs (7 days)
     access_logs = []

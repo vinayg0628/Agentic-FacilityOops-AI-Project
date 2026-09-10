@@ -109,13 +109,6 @@ export function LandingPage() {
     return cleanup;
   }, []);
 
-  const skipIntro = () => {
-    setIntroProgress(100);
-    setIntroStatus('FACILITY AI READY');
-    setIntroSlideOpen(true);
-    setTimeout(() => setIntroVisible(false), 950);
-  };
-
   const lineIdxRef = useRef(0);
   const pad = (n) => n.toString().padStart(2, '0');
 
@@ -263,15 +256,6 @@ export function LandingPage() {
       {/* ANIMATED OPENING INTRO SLIDE - "FACILITY AI" */}
       {introVisible && (
         <div className={`intro-slide-curtain ${introSlideOpen ? 'slide-open' : ''}`}>
-          {/* Skip Button */}
-          <button
-            onClick={skipIntro}
-            className="absolute top-6 right-6 z-20 f-mono text-xs text-slate-400 hover:text-[var(--cyan)] border border-slate-700/80 hover:border-[var(--cyan)] px-3 py-1.5 rounded-lg bg-black/50 backdrop-blur transition flex items-center gap-1.5 cursor-pointer"
-          >
-            <span>Skip Intro</span>
-            <i className="fas fa-forward text-[10px]"></i>
-          </button>
-
           <div className="relative z-10 flex flex-col items-center text-center px-6 max-w-xl">
             {/* Pulsing Core Icon */}
             <div className="intro-neural-core mb-6 bg-[var(--cyan)]/5">

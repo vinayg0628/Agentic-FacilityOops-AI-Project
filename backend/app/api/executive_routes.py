@@ -14,14 +14,7 @@ from app.models.equipment import Equipment
 from app.models.occupancy_models import OccupancyReading
 from app.models.security_models import SecurityIncident
 
-from app.core.security import require_role
-
-# Executive dashboard restricted to Executive/Admin roles.
-router = APIRouter(
-    prefix="/executive", 
-    tags=["executive"],
-    dependencies=[Depends(require_role(["admin", "executive"]))]
-)
+router = APIRouter(prefix="/executive", tags=["executive"])
 
 @router.get("/overview")
 def get_executive_overview(facility_id: str = "ALL", db: Session = Depends(get_db)):

@@ -96,8 +96,6 @@ def seed_cost_data(db: Session):
                 estimated_saving=35000,
                 implementation_cost=120000,
                 annual_saving=35000 * 12,
-                ROI=((35000 * 12 - 120000) / 120000) * 100,
-                payback_period=120000 / 35000,
                 priority="HIGH",
                 confidence=0.88
             )

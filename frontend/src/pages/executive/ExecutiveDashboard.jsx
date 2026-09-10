@@ -27,8 +27,8 @@ const ExecutiveDashboard = () => {
         
         setData({
           overview: overviewRes.data,
-          costDistribution: costRes.data,
-          topOpportunities: oppsRes.data,
+          costDistribution: costRes.data.value || costRes.data,
+          topOpportunities: oppsRes.data.value || oppsRes.data,
           health: healthRes.data,
           aiSummary: aiRes.data.summary
         });
@@ -46,6 +46,7 @@ const ExecutiveDashboard = () => {
   const { overview, costDistribution, topOpportunities, health, aiSummary } = data;
 
   const totalCost = costDistribution.reduce((acc, c) => acc + c.amount, 0);
+  const costPercentage = (amount) => totalCost ? (amount / totalCost) * 100 : 0;
 
   return (
     <div className="dashboard-page space-y-6">
@@ -110,10 +111,10 @@ const ExecutiveDashboard = () => {
               <div key={i}>
                 <div className="flex justify-between text-xs mb-1">
                   <span className="text-slate-300">{c.category}</span>
-                  <span className="text-slate-400 font-mono">{((c.amount / totalCost) * 100).toFixed(0)}%</span>
+                  <span className="text-slate-400 font-mono">{costPercentage(c.amount).toFixed(0)}%</span>
                 </div>
                 <div className="w-full bg-slate-800 rounded-full h-1.5">
-                  <div className="bg-amber-400 h-1.5 rounded-full" style={{ width: `${(c.amount / totalCost) * 100}%` }}></div>
+                  <div className="bg-amber-400 h-1.5 rounded-full" style={{ width: `${costPercentage(c.amount)}%` }}></div>
                 </div>
               </div>
             ))}

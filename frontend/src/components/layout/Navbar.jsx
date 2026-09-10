@@ -190,7 +190,7 @@ export const Navbar = () => {
       <div className="flex items-center justify-between gap-4">
 
         {/* Brand / Logo & Live System Status */}
-        <div className="flex items-center gap-4 cursor-pointer" onClick={() => navigate('/dashboard')}>
+        <div className="flex items-center gap-4 cursor-pointer" onClick={() => navigate('/landing')}>
           <div className="flex items-center gap-2.5">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-600 to-blue-600 flex items-center justify-center text-white shadow-lg shadow-cyan-500/20">
               <Layers className="w-6 h-6 animate-pulse" />
