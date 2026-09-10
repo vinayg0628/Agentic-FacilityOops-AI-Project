@@ -63,9 +63,9 @@ Built for **facility managers, engineers, and technicians** who need real-time v
 |--------|--------|-------------|
 | ⚡ **Energy Intelligence Agent** | ✅ **Live** | Spike detection, HVAC load analysis, power factor monitoring, night-hours anomaly detection, 7-day baseline comparison |
 | 🔧 **Predictive Maintenance Agent** | ✅ **Live** | 11-rule diagnostic engine, health scoring formula, failure prediction, RUL calculation, type-specific recommendations |
-| 🧠 **Intelligence Engine** | ✅ **Live** | Cross-agent orchestration, unified alert correlation |
-| 👥 **Occupancy Agent** | 🔜 Coming | Space utilization, density tracking, zone occupancy |
-| 🔐 **Security Agent** | 🔜 Coming | Access control, anomaly detection, incident management |
+| 👥 **Occupancy Agent** | ✅ **Live** | Space utilization, true architectural SVG heatmaps, zone occupancy tracking, time-range analysis |
+| 🔐 **Security Agent** | ✅ **Live** | Access control anomalies, CCTV events, visitor tracking, incident management |
+| 🧠 **Intelligence Engine** | ✅ **Live** | Cross-agent orchestration (e.g. Security + Occupancy correlation), unified alert correlation |
 | 💰 **Cost Optimization Agent** | 🔜 Coming | Budget forecasting, cost attribution, savings recommendations |
 
 ### 🖥️ Dashboard Pages
