@@ -21,7 +21,8 @@ export const IncidentDetailPage = () => {
     const load = async () => {
         setLoading(true); setError(null);
         try {
-            const r = await axios.get(`http://localhost:8000/api/incidents/${id}`, { timeout: 10000 });
+            const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+            const r = await axios.get(`${apiUrl}/incidents/${id}`, { timeout: 10000 });
             setDetail(r.data);
         } catch (e) { setError('Failed to load incident details.'); }
         setLoading(false);
@@ -30,7 +31,8 @@ export const IncidentDetailPage = () => {
     const updateStatus = async (status) => {
         setUpdating(true);
         try {
-            await axios.patch(`http://localhost:8000/api/incidents/${id}/status`, { status });
+            const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+            await axios.patch(`${apiUrl}/incidents/${id}/status`, { status });
             await load();
         } catch {}
         setUpdating(false);

@@ -4,7 +4,8 @@ import { GlassCard } from '../../components/cards/GlassCard';
 
 export const ReportsPage = () => {
   const downloadReport = (format) => {
-    window.open(`http://localhost:8000/api/v1/reports/export/${format}`, '_blank');
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+    window.open(`${apiUrl}/v1/reports/export/${format}`, '_blank');
   };
 
   return (
