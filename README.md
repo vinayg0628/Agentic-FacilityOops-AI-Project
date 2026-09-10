@@ -610,16 +610,5 @@ This project is licensed under the **MIT License** — see the [LICENSE](LICENSE
 
 <br/>
 
-[![GitHub](https://img.shields.io/badge/GitHub-vinayg0628-181717?style=flat-square&logo=github)](https://github.com/vinayg0628/Agentic-FacilityOops-AI-Project)
-
+[![GitHub](https://img.shields.io/badge/GitHub-vinayg0628-181717?style=flat-square&logo=github)](https://github.com/vinayg0628/Agentic-FacilityOops-AI
 </div>
-# #   C l o u d   D e p l o y m e n t   T a r g e t   ( M i l e s t o n e   4 ) 
- 
- # # #   A r c h i t e c t u r e 
- -   * * D a t a b a s e * * :   A W S   R D S   ( P o s t g r e S Q L )   o r   A z u r e   D a t a b a s e   f o r   P o s t g r e S Q L . 
- -   * * C a c h e * * :   A W S   E l a s t i C a c h e   ( R e d i s )   o r   A z u r e   C a c h e   f o r   R e d i s . 
- -   * * B a c k e n d * * :   A W S   E C S   ( F a r g a t e )   o r   A z u r e   A p p   S e r v i c e   ( D o c k e r   c o n t a i n e r ) . 
- -   * * F r o n t e n d * * :   A W S   S 3   +   C l o u d F r o n t   o r   A z u r e   S t a t i c   W e b   A p p s . 
- 
- >   * * N o t e : * *   D o   n o t   p r o v i s i o n   r e a l   c l o u d   r e s o u r c e s   w i t h o u t   e x p l i c i t   a p p r o v a l .   U s e   d o c k e r - c o m p o s e   f o r   l o c a l   t e s t i n g .  
- 
